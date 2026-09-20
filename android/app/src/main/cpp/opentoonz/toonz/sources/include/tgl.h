@@ -21,7 +21,9 @@
 #define GLUT_NO_WARNING_DISABLE
 #endif
 
-#if defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
+#if defined(__ANDROID__)
+#include "../../../../../../android_gl_compat.h"
+#elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
