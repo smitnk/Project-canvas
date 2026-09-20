@@ -1163,6 +1163,7 @@ fun EditorScreen(
     var showFrameTools by remember { mutableStateOf(false) }
     var showAudioDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val recorder = remember { AudioRecorderController(context) }
     val audioPreview = remember { AudioPreviewController(context) }
     var isRecording by remember { mutableStateOf(false) }
@@ -1180,7 +1181,7 @@ fun EditorScreen(
     }
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            coroutineScope.launch(kotlinx.coroutines.Dispatchers.Default) {
                 val imported = runCatching {
                     RotoscopeSequenceImporter.import(
                         resolver = context.contentResolver,
@@ -1220,10 +1221,7 @@ fun EditorScreen(
     var showBatchFrames by remember { mutableStateOf(false) }
     var batchStartFrame by remember { mutableIntStateOf(0) }
     var batchEndFrame by remember { mutableIntStateOf(0) }
-    var waveform by remember { mutableStateOf<List<Float>>(emptyList()) }
     var showProTools by remember { mutableStateOf(false) }
-    var rotoscopeFrames by remember { mutableStateOf<List<ImageBitmap>>(emptyList()) }
-    var rotoscopeMaxFrames by remember { mutableIntStateOf(60) }
     var chromaTolerance by remember { mutableIntStateOf(60) }
 
     // Selection and Transformation state
