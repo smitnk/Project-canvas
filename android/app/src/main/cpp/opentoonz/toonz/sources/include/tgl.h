@@ -22,7 +22,9 @@
 #endif
 
 #if defined(__ANDROID__)
-#include "../../../../android_gl_compat.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 #elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
 #include <GL/gl.h>
 #include <GL/glu.h>
