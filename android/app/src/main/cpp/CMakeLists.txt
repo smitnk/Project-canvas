@@ -63,6 +63,7 @@ target_compile_definitions(mesa_glu PRIVATE
 )
 target_compile_options(mesa_glu PRIVATE
     -include assert.h
+    -include limits.h
 )
 
 target_link_libraries(mesa_glu PUBLIC GL)
