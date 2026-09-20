@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <GL/glut.h>
 #elif defined(__ANDROID__)
-#include <GL/glut.h>
+// Android uses GL4ES desktop OpenGL compatibility directly; GLUT is not part of the drawing path.
 #elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
 #include <GL/glut.h>
 #else
@@ -86,16 +86,27 @@ TRectD tglGetBounds() {
 //-----------------------------------------------------------------------------
 
 double tglGetTextWidth(const std::string &s, void *font) {
+#if defined(__ANDROID__)
+  (void)s;
+  (void)font;
+  return 0.0;
+#else
   double factor = 0.07;
   double w      = 0;
   for (int i = 0; i < (int)s.length(); i++) w += glutStrokeWidth(font, s[i]);
   return w * factor;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 
 void tglDrawText(const TPointD &p, const std::string &s, void *character) {
-#ifndef __sgi
+#if defined(__ANDROID__)
+  (void)p;
+  (void)s;
+  (void)character;
+  return;
+#elif !defined(__sgi)
   glPushMatrix();
   glTranslated(p.x, p.y, 0);
   double factor = 0.07;
@@ -111,7 +122,12 @@ void tglDrawText(const TPointD &p, const std::string &s, void *character) {
 //-----------------------------------------------------------------------------
 
 void tglDrawText(const TPointD &p, const std::wstring &s, void *character) {
-#ifndef __sgi
+#if defined(__ANDROID__)
+  (void)p;
+  (void)s;
+  (void)character;
+  return;
+#elif !defined(__sgi)
   glPushMatrix();
   glTranslated(p.x, p.y, 0);
   double factor = 0.07;
@@ -264,6 +280,7 @@ void tglMultColorMask(GLboolean red, GLboolean green, GLboolean blue,
 
 //============================================================================
 
+#if !defined(__ANDROID__)
 namespace {
 //============================================================================
 
@@ -367,6 +384,7 @@ glScaled(scale.lx*0.07, scale.ly*0.07, 1.0);
   /*glPopMatrix();*/
 }
 
+#endif
 //============================================================================
 
 }  // anonymous namespace
