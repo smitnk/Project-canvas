@@ -23,9 +23,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcolor
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl
-    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
-    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcolor
-    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/toonzlib
 )
 
@@ -113,6 +110,9 @@ target_include_directories(
     opentoonz_drawing_engine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcolor
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgeometry
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvectorimage
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvrender
