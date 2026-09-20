@@ -24,7 +24,6 @@
 #if defined(__ANDROID__)
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
 #elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -121,10 +120,17 @@ DVAPI TRectD tglGetBounds();
 
 //! Draw text in string s at position p.
 
+#if defined(__ANDROID__)
+DVAPI void tglDrawText(const TPointD &p, const std::string &s,
+                       void *font = nullptr);
+DVAPI void tglDrawText(const TPointD &p, const std::wstring &s,
+                       void *font = nullptr);
+#else
 DVAPI void tglDrawText(const TPointD &p, const std::string &s,
                        void *font = GLUT_STROKE_ROMAN);
 DVAPI void tglDrawText(const TPointD &p, const std::wstring &s,
                        void *font = GLUT_STROKE_ROMAN);
+#endif
 
 //! Returns text width
 
