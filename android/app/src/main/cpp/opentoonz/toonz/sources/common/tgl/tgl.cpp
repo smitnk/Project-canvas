@@ -12,7 +12,9 @@
 #ifdef _WIN32
 #include <cstdlib>
 #include <GL/glut.h>
-#elif defined(LINUX) && !defined(__ANDROID__) || defined(FREEBSD) || defined(HAIKU)
+#elif defined(__ANDROID__)
+#include <GL/glut.h>
+#elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
 #include <GL/glut.h>
 #else
 #include <GLUT/glut.h>
@@ -597,6 +599,28 @@ void tglMakeCurrent(TGlContext context) {
 }
 
 void tglDoneCurrent(TGlContext) { wglMakeCurrent(NULL, NULL); }
+
+#elif defined(__ANDROID__)
+
+#include <EGL/egl.h>
+
+TGlContext tglGetCurrentContext() {
+  return reinterpret_cast<TGlContext>(eglGetCurrentContext());
+}
+
+void tglMakeCurrent(TGlContext context) {
+  EGLDisplay display = eglGetCurrentDisplay();
+  EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
+  EGLSurface read = eglGetCurrentSurface(EGL_READ);
+  if (display != EGL_NO_DISPLAY && draw != EGL_NO_SURFACE && read != EGL_NO_SURFACE)
+    eglMakeCurrent(display, draw, read, reinterpret_cast<EGLContext>(context));
+}
+
+void tglDoneCurrent(TGlContext) {
+  EGLDisplay display = eglGetCurrentDisplay();
+  if (display != EGL_NO_DISPLAY)
+    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
 
 #elif defined(LINUX) || defined(FREEBSD) || defined(__sgi) || defined(MACOSX) || defined(HAIKU)
 
