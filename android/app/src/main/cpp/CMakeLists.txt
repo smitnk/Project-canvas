@@ -52,6 +52,8 @@ set(FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
 set(FREEGLUT_REPLACE_GLUT ON CACHE BOOL "" FORCE)
 add_subdirectory(${FREEGLUT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/freeglut)
 
+target_include_directories(freeglut_static PRIVATE ${GL4ES_SOURCE_DIR}/include)
+
 include_directories(
     ${GL4ES_SOURCE_DIR}/include
     ${FREEGLUT_SOURCE_DIR}/include
