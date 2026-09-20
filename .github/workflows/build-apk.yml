@@ -21,6 +21,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fetch real OpenGL compatibility sources
+        run: |
+          git clone --depth 1 https://github.com/ptitSeb/gl4es.git android/app/src/main/cpp/gl4es
+          git -C android/app/src/main/cpp/gl4es fetch --depth 1 origin 81547d986798e876de8b434193920b606a72363f
+          git -C android/app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
+          git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git android/app/src/main/cpp/freeglut
+          git -C android/app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
