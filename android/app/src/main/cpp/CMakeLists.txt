@@ -88,6 +88,7 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tgeometry/tgeometry.cpp
     opentoonz/toonz/sources/common/tvectorimage/cornerdetector.cpp
     opentoonz/toonz/sources/common/tvectorimage/tregion.cpp
+opentoonz/toonz/sources/common/tvrender/tregionprop.cpp
 opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
     opentoonz/toonz/sources/common/tvrender/tellipticbrush.cpp
