@@ -1,7 +1,8 @@
 package com.smitnk.motioncanvas.selection
 
 import androidx.compose.ui.geometry.Offset
-import com.smitnk.motioncanvas.Stroke
+import com.smitnk.motioncanvas.DrawPoint
+import com.smitnk.motioncanvas.DrawStroke
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -15,7 +16,7 @@ data class MultiFrameTransform(
 )
 
 object MultiFrameTransformEngine {
-    fun apply(stroke: Stroke, transform: MultiFrameTransform): Stroke {
+    fun apply(stroke: DrawStroke, transform: MultiFrameTransform): DrawStroke {
         if (stroke.points.isEmpty()) return stroke
         val r = Math.toRadians(transform.rotationDegrees.toDouble())
         val c = cos(r).toFloat()
@@ -25,17 +26,18 @@ object MultiFrameTransformEngine {
         val points = stroke.points.map { p ->
             val x = (p.x - transform.pivot.x) * sx
             val y = (p.y - transform.pivot.y) * sy
-            Offset(
+            DrawPoint(
                 transform.pivot.x + x * c - y * s + transform.translation.x,
-                transform.pivot.y + x * s + y * c + transform.translation.y
+                transform.pivot.y + x * s + y * c + transform.translation.y,
+                p.pressure
             )
         }
         return stroke.copy(points = points)
     }
 
     fun applyToFrames(
-        frames: List<List<Stroke>>,
+        frames: List<List<DrawStroke>>,
         transform: MultiFrameTransform
-    ): List<List<Stroke>> =
+    ): List<List<DrawStroke>> =
         frames.map { frame -> frame.map { apply(it, transform) } }
 }
