@@ -5,7 +5,9 @@
 //#include "tofflinegl.h"
 
 #include "tstroke.h"
+#if !defined(__ANDROID__)
 #include "toonz/preferences.h"
+#endif
 
 using namespace std;
 
@@ -154,10 +156,12 @@ void StrokeGenerator::drawFragments(int first, int last) {
   if (m_points.size() == 2) {
     a = m_points[0];
     b = m_points[1];
+#if !defined(__ANDROID__)
     if (Preferences::instance()->getShow0ThickLines()) {
       if (a.thick == 0) a.thick = 0.1;
       if (b.thick == 0) b.thick = 0.1;
     }
+#endif
     // m_p0 = m_p1 = b;
     v          = a.thick * normalizeOrZero(rotate90(b - a));
     m_p0       = a + v;
@@ -184,11 +188,13 @@ void StrokeGenerator::drawFragments(int first, int last) {
     a = m_points[i - 1];
     b = m_points[i];
     c = m_points[i + 1];
+#if !defined(__ANDROID__)
     if (Preferences::instance()->getShow0ThickLines()) {
       if (a.thick == 0) a.thick = 0.1;
       if (b.thick == 0) b.thick = 0.1;
       if (c.thick == 0) c.thick = 0.1;
     }
+#endif
     if (i - 1 == 0) {
       v    = a.thick * normalizeOrZero(rotate90(b - a));
       m_p0 = a + v;
