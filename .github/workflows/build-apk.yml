@@ -32,6 +32,15 @@ jobs:
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/fg_main_android.c"); s=p.read_text(); s2=s.replace("ALooper_pollAll(", "ALooper_pollOnce("); assert s2 != s; p.write_text(s2)'
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h"); s=p.read_text(); s=s.replace("#   include <EGL/egl.h>\\n#   include <GLES/gl.h>\\n#   include <GLES2/gl2.h>", "#   include <EGL/egl.h>\\n#   include <GL/gl.h>"); p.write_text(s)'
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h"); s=p.read_text(); s=s.replace("#   include <GLES2/gl2.h>", "#   include <GL/gl.h>"); p.write_text(s)'
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
+          s = p.read_text()
+          needle = "ELSE()\\nLIST(APPEND FREEGLUT_SRCS\\nsrc/gles_stubs.c\\n)"
+          repl = "ELSE()\\nLIST(APPEND FREEGLUT_SRCS\\nsrc/fg_font.c\\nsrc/fg_menu.c\\n)"
+          assert needle in s
+          p.write_text(s.replace(needle, repl, 1))
+          PY
           python3 <<'PY'
           from pathlib import Path
           p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
