@@ -178,7 +178,7 @@ undefined machine order !!!!
   TPixelRGBM64(int rr, int gg, int bb, int mm = maxChannelValue)
       : r(rr), g(gg), b(bb), m(mm){};
 #else
-#if defined(LINUX) || defined(FREEBSD) || defined(MACOSX) || defined(HAIKU)
+#if defined(LINUX) || defined(FREEBSD) || defined(MACOSX) || defined(HAIKU) || defined(__ANDROID__)
 
 #ifdef powerpc
 
