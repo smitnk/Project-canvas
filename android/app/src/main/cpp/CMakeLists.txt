@@ -35,6 +35,10 @@ include_directories(
 set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
 set(FREEGLUT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/freeglut)
 
+# FreeGLUT 3.8.0 asks CMake 3.22 for a desktop OpenGL package even in its
+# Android GLES path. Map that package to the real GL4ES + Android EGL stack.
+list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 set(STATICLIB ON CACHE BOOL "" FORCE)
 set(DEFAULT_ES 2 CACHE STRING "" FORCE)
 set(NOX11 ON CACHE BOOL "" FORCE)
