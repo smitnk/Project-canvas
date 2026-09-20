@@ -1,0 +1,16 @@
+#pragma once
+#include <cstdint>
+#include <ctime>
+
+class QDateTime {
+public:
+  QDateTime() : m_time(0) {}
+  explicit QDateTime(std::time_t t) : m_time(t) {}
+  bool isValid() const { return m_time != 0; }
+  std::time_t toSecsSinceEpoch() const { return m_time; }
+  static QDateTime fromSecsSinceEpoch(std::int64_t t) {
+    return QDateTime(static_cast<std::time_t>(t));
+  }
+private:
+  std::time_t m_time;
+};
