@@ -170,7 +170,7 @@ public:
 #elif defined(TNZ_MACHINE_CHANNEL_ORDER_RGBM)
 Channel r, g, b, m;
 #else
-undefined machine order !!!!
+static_assert(false, "Undefined machine order !!!!")
 #endif
 
 #ifdef _WIN32
