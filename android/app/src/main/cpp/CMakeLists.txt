@@ -45,7 +45,7 @@ set(NO_GBM ON CACHE BOOL "" FORCE)
 set(USE_ANDROID_LOG ON CACHE BOOL "" FORCE)
 add_subdirectory(${GL4ES_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gl4es)
 
-set(FREEGLUT_GLES OFF CACHE BOOL "" FORCE)
+set(FREEGLUT_GLES ON CACHE BOOL "" FORCE)
 # FreeGLUT must use the real GL4ES desktop OpenGL header/API. Android platform
 # support still uses EGL through its native Android sources; only the GLES
 # header/bootstrap mode is disabled here.
