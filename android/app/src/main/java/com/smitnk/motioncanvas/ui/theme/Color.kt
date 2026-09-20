@@ -10,4 +10,5 @@ val TextSecondary = Color(0xFF96969D)
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
 val BorderSubtle = Color(0xFF333338)
-\nval TextPrimary = White\n
+
+val TextPrimary = White
