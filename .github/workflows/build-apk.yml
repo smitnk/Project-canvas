@@ -40,6 +40,10 @@ jobs:
           tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
           mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
           test -d app/src/main/cpp/glu/src
+          curl -L --fail https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz -o /tmp/glu-9.0.3.tar.xz
+          tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
+          mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
+          test -d app/src/main/cpp/glu/src
 
 
 
