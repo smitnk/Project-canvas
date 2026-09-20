@@ -1,62 +1,75 @@
 name: Project Canvas Android Build
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: android
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Preflight workflow
+      - name: Preflight
+        working-directory: android
+        shell: bash
         run: |
-          echo "Workflow job started"
+          set -euxo pipefail
           pwd
           test -f app/build.gradle || test -f app/build.gradle.kts
+          test -f app/src/main/cpp/CMakeLists.txt
           echo "Android project detected"
 
       - name: Fetch real OpenGL compatibility sources
+        working-directory: android
+        shell: bash
         run: |
+          set -euxo pipefail
           git clone --depth 1 https://github.com/ptitSeb/gl4es.git app/src/main/cpp/gl4es
           git -C app/src/main/cpp/gl4es fetch --depth 1 origin 81547d986798e876de8b434193920b606a72363f
           git -C app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
-          # GL4ES has a native Android backend: build its real desktop-GL
-          # compatibility API on top of Android GLES/EGL, not fake wrappers.
-          echo "Using pinned GL4ES Android backend for OpenToonz fixed-function GL"
-          grep -q "if(ANDROID)" app/src/main/cpp/gl4es/CMakeLists.txt
+          grep -q 'if(ANDROID)' app/src/main/cpp/gl4es/CMakeLists.txt
+
           git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git app/src/main/cpp/freeglut
-          # Real Mesa GLU 9.0.3 required by OpenToonz TGL
+          git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
+
           curl -L --fail https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz -o /tmp/glu-9.0.3.tar.xz
           tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
           mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
-          git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
-          python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/native_app_glue/android_native_app_glue.c"); s=p.read_text(); needle="#include <errno.h>\n"; assert needle in s; s=s.replace(needle, needle+"#include <stdlib.h>\n", 1); p.write_text(s)'
-          python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/fg_main_android.c"); s=p.read_text(); s2=s.replace("ALooper_pollAll(", "ALooper_pollOnce("); assert s2 != s; p.write_text(s2)'
-          python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h"); s=p.read_text(); s=s.replace("#   include <EGL/egl.h>\\n#   include <GLES/gl.h>\\n#   include <GLES2/gl2.h>", "#   include <EGL/egl.h>\\n#   include <GL/gl.h>"); p.write_text(s)'
-          python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h"); s=p.read_text(); s=s.replace("#   include <GLES2/gl2.h>", "#   include <GL/gl.h>"); p.write_text(s)'
+
           python3 - <<'PY'
           from pathlib import Path
+
+          p = Path("app/src/main/cpp/freeglut/src/android/native_app_glue/android_native_app_glue.c")
+          s = p.read_text()
+          if "#include <stdlib.h>" not in s:
+              s = s.replace("#include <errno.h>\n", "#include <errno.h>\n#include <stdlib.h>\n", 1)
+          p.write_text(s)
+
+          p = Path("app/src/main/cpp/freeglut/src/android/fg_main_android.c")
+          s = p.read_text()
+          s = s.replace("ALooper_pollAll(", "ALooper_pollOnce(")
+          p.write_text(s)
+
+          p = Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h")
+          s = p.read_text()
+          s = s.replace("#   include <EGL/egl.h>\n#   include <GLES/gl.h>\n#   include <GLES2/gl2.h>",
+                        "#   include <EGL/egl.h>\n#   include <GL/gl.h>")
+          s = s.replace("#   include <GLES2/gl2.h>", "#   include <GL/gl.h>")
+          p.write_text(s)
+
           p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
           s = p.read_text()
           s = s.replace("        src/gles_stubs.c\n", "        src/fg_font.c\n        src/fg_menu.c\n", 1)
-          s = s.replace(
-              "IF(FREEGLUT_GLES OR FREEGLUT_WAYLAND)",
-              "IF(FREEGLUT_GLES OR ANDROID OR FREEGLUT_WAYLAND)",
-              1,
-          )
+          s = s.replace("IF(FREEGLUT_GLES OR FREEGLUT_WAYLAND)",
+                        "IF(FREEGLUT_GLES OR ANDROID OR FREEGLUT_WAYLAND)", 1)
           old = """    if(NOT CMAKE_VERSION VERSION LESS "3.10")
       FIND_PACKAGE(OpenGL REQUIRED COMPONENTS OpenGL)
       LIST(APPEND LIBS OpenGL::GL)
@@ -96,26 +109,28 @@ jobs:
       endif()
       INCLUDE_DIRECTORIES(${OPENGL_GLU_INCLUDE_DIR})
     endif()"""
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s)
+          if old not in s:
+              raise SystemExit("Expected FreeGLUT CMake block was not found")
+          p.write_text(s.replace(old, new, 1))
           PY
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.11.1"
+          gradle-version: '8.11.1'
 
       - name: Generate Gradle wrapper
+        working-directory: android
         run: gradle wrapper --gradle-version 8.11.1
 
       - name: Assemble debug APK
+        working-directory: android
         run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload debug APK
