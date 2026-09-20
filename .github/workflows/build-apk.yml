@@ -21,6 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preflight workflow
+        run: |
+          echo "Workflow job started"
+          pwd
+          test -f app/build.gradle || test -f app/build.gradle.kts
+          echo "Android project detected"
+
       - name: Fetch real OpenGL compatibility sources
         run: |
           git clone --depth 1 https://github.com/ptitSeb/gl4es.git app/src/main/cpp/gl4es
