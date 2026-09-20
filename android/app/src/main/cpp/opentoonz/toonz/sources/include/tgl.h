@@ -134,8 +134,12 @@ DVAPI void tglDrawText(const TPointD &p, const std::wstring &s,
 
 //! Returns text width
 
+#if defined(__ANDROID__)
+DVAPI double tglGetTextWidth(const std::string &s, void *font = nullptr);
+#else
 DVAPI double tglGetTextWidth(const std::string &s,
                              void *font = GLUT_STROKE_ROMAN);
+#endif
 
 /*!
  Draw circle of radius r with center c.
