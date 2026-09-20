@@ -73,7 +73,6 @@ set(OPENTOONZ_DRAWING_SOURCES
     # Existing ProjectCanvas adapter and platform support
     OpenToonzEngineCore.cpp
     OpenToonzNativeBridge.cpp
-    OpenToonzRuntimeSupport.cpp
 
     # ------------------------------------------------------
     # Actual OpenToonz stroke generation
