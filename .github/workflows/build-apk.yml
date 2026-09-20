@@ -32,9 +32,9 @@ jobs:
           grep -q "if(ANDROID)" app/src/main/cpp/gl4es/CMakeLists.txt
           git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git app/src/main/cpp/freeglut
           # Real Mesa GLU 9.0.3 required by OpenToonz TGL
-          git clone --depth 1 --branch 9.0.3 https://gitlab.freedesktop.org/mesa/glu.git app/src/main/cpp/glu
-          git -C app/src/main/cpp/glu fetch --depth 1 origin 9.0.3
-          git -C app/src/main/cpp/glu checkout 9.0.3
+          curl -L --fail https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz -o /tmp/glu-9.0.3.tar.xz
+          tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
+          mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
           git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/native_app_glue/android_native_app_glue.c"); s=p.read_text(); needle="#include <errno.h>\n"; assert needle in s; s=s.replace(needle, needle+"#include <stdlib.h>\n", 1); p.write_text(s)'
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/fg_main_android.c"); s=p.read_text(); s2=s.replace("ALooper_pollAll(", "ALooper_pollOnce("); assert s2 != s; p.write_text(s2)'
