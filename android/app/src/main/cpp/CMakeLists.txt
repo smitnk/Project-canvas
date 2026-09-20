@@ -52,28 +52,8 @@ target_include_directories(mesa_glu PUBLIC
 )
 target_link_libraries(mesa_glu PUBLIC GL)
 
-# FreeGLUT 3.8.0 asks CMake 3.22 for a desktop OpenGL package even in its
-# Android GLES path. Map that package to the real GL4ES + Android EGL stack.
-list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-set(STATICLIB ON CACHE BOOL "" FORCE)
-set(DEFAULT_ES 2 CACHE STRING "" FORCE)
-set(NOX11 ON CACHE BOOL "" FORCE)
-set(NO_GBM ON CACHE BOOL "" FORCE)
-set(USE_ANDROID_LOG ON CACHE BOOL "" FORCE)
-add_subdirectory(${GL4ES_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gl4es)
-
-set(FREEGLUT_GLES OFF CACHE BOOL "" FORCE)
-# FreeGLUT must use the real GL4ES desktop OpenGL header/API. Android platform
-# support still uses EGL through its native Android sources; only the GLES
-# header/bootstrap mode is disabled here.
-set(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
-set(FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
-set(FREEGLUT_REPLACE_GLUT ON CACHE BOOL "" FORCE)
-add_subdirectory(${FREEGLUT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/freeglut)
-
-target_include_directories(freeglut_static BEFORE PRIVATE ${GL4ES_SOURCE_DIR}/include)
+# FreeGLUT is intentionally not part of the Android drawing path.
+# OpenToonz legacy stroke-font helpers are disabled on Android; core drawing uses GL4ES directly.
 
 include_directories(
     ${GL4ES_SOURCE_DIR}/include
@@ -158,7 +138,6 @@ if(ANDROID)
         ${egl-lib}
         GL
         mesa_glu
-        freeglut_static
     )
 endif()
 
