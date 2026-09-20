@@ -1,7 +1,16 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <cstdlib>
+#include <cctype>
+#include <algorithm>
 #include "QChar"
+
+namespace Qt {
+enum SplitBehavior { KeepEmptyParts, SkipEmptyParts };
+}
+
+class QStringList;
 
 class QString : public std::string {
 public:
@@ -17,20 +26,90 @@ public:
     if (ok) *ok = (end != c_str());
     return (int)v;
   }
+
+  unsigned int toUInt(bool *ok = nullptr) const {
+    char *end = nullptr;
+    unsigned long v = std::strtoul(c_str(), &end, 10);
+    if (ok) *ok = (end != c_str());
+    return (unsigned int)v;
+  }
+
   double toDouble(bool *ok = nullptr) const {
     char *end = nullptr;
     double v = std::strtod(c_str(), &end);
     if (ok) *ok = (end != c_str());
     return v;
   }
+
+  static QString number(int value) { return QString(std::to_string(value)); }
+  static QString number(unsigned int value) { return QString(std::to_string(value)); }
+  static QString number(long value) { return QString(std::to_string(value)); }
+  static QString number(double value) { return QString(std::to_string(value)); }
+
   static int localeAwareCompare(const QString& a, const QString& b) {
     return a.compare(b);
   }
+
+  QString toLower() const {
+    QString result(*this);
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return result;
+  }
+
+  QString arg(int value) const { return replaceNextPlaceholder(QString::number(value)); }
+  QString arg(unsigned int value) const { return replaceNextPlaceholder(QString::number(value)); }
+  QString arg(const QString& value) const { return replaceNextPlaceholder(value); }
+
   std::string toStdString() const { return *this; }
   static QString fromStdString(const std::string& s) { return QString(s); }
   static QString fromUtf8(const char* s) { return QString(s); }
-  static QString fromStdWString(const std::wstring& ws) { return QString(ws.begin(), ws.end()); }
+  static QString fromStdWString(const std::wstring& ws) {
+    return QString(ws.begin(), ws.end());
+  }
   std::string toUtf8() const { return *this; }
   std::string toLatin1() const { return *this; }
   std::wstring toStdWString() const { return std::wstring(begin(), end()); }
+
+  bool isNull() const { return empty(); }
+
+  QStringList split(char separator, Qt::SplitBehavior behavior) const;
+
+private:
+  QString replaceNextPlaceholder(const QString& replacement) const {
+    QString result(*this);
+    for (int i = 1; i <= 9; ++i) {
+      std::string token = "%" + std::to_string(i);
+      auto pos = result.find(token);
+      if (pos != std::string::npos) {
+        result.replace(pos, token.size(), replacement);
+        return result;
+      }
+    }
+    return result;
+  }
 };
+
+class QStringList : public std::vector<QString> {
+public:
+  using std::vector<QString>::vector;
+  bool isEmpty() const { return empty(); }
+  int count() const { return static_cast<int>(size()); }
+};
+
+inline QStringList QString::split(char separator, Qt::SplitBehavior behavior) const {
+  QStringList result;
+  std::string current;
+  for (char c : *this) {
+    if (c == separator) {
+      if (behavior == Qt::KeepEmptyParts || !current.empty())
+        result.emplace_back(current);
+      current.clear();
+    } else {
+      current.push_back(c);
+    }
+  }
+  if (behavior == Qt::KeepEmptyParts || !current.empty())
+    result.emplace_back(current);
+  return result;
+}
