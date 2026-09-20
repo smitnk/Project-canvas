@@ -2425,9 +2425,6 @@ fun EditorScreen(
     }
 }
 
-
-}
-
 @Composable
 fun OnionSkinSettingsDialog(
     state: OnionSkinState,
