@@ -14,7 +14,6 @@ add_definitions(
 # OpenToonz public/common headers
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvectorimage
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvrender
@@ -140,6 +139,7 @@ endif()
 # accidentally resolve against an unrelated system copy.
 target_include_directories(
     opentoonz_drawing_engine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
