@@ -99,10 +99,8 @@ set(OPENTOONZ_DRAWING_SOURCES
     # Recovered OpenToonz v1.8.0 implementations required by the drawing dependency chain
     opentoonz/toonz/sources/common/traster/traster.cpp
     opentoonz/toonz/sources/common/tcolor/tpixel.cpp
-    opentoonz/toonz/sources/common/tvrender/tsimplecolorstyles.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrush.cpp
     opentoonz/toonz/sources/common/tgl/tgl.cpp
-    opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
 
     # ------------------------------------------------------
     # Vector image/style sources already present in v29
