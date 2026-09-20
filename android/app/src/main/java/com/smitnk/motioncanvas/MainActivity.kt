@@ -410,7 +410,6 @@ fun MotionCanvasApp() {
                     val x = target % period
                     target = if (x < total) x else period - x
                 }
-            },
             }
             currentFrameIndex = target.coerceIn(0, total - 1)
             sharedAudioClock.seekToFrame(currentFrameIndex)
@@ -1473,8 +1472,7 @@ fun EditorScreen(
                         Icon(Icons.Default.Layers, contentDescription = "Layers", tint = White)
                     }
                     if (workspaceVisibility.referenceWidget) {
-                    IconButton(onClick = { imagePicker.launch("image/*") }
-                    }) {
+                    IconButton(onClick = { imagePicker.launch("image/*") }) {
                         Icon(Icons.Default.Image, contentDescription = "Reference image", tint = if (referenceBitmap != null) PinkAccent else White)
                     }
                     IconButton(onClick = { showReferenceDialog = true }) {
@@ -1486,24 +1484,24 @@ fun EditorScreen(
                         label = { Text("Ref Edit") }
                     )
                     if (workspaceVisibility.frameToolsWidget) {
-                    IconButton(onClick = { showFrameTools = true }
-                    }) {
+                    IconButton(onClick = { showFrameTools = true }) {
                         Icon(Icons.Default.Flag, contentDescription = "Frame tools", tint = White)
                     }
+                    }
                     if (workspaceVisibility.audioWidget) {
-                    IconButton(onClick = { showAudioDialog = true }
-                    }) {
+                    IconButton(onClick = { showAudioDialog = true }) {
                         Icon(Icons.Default.Mic, contentDescription = "Voice recording", tint = if (isRecording) PinkAccent else White)
                     }
+                    }
                     if (workspaceVisibility.advancedWidget) {
-                    IconButton(onClick = { showAdvancedPanel = true }
-                    }) {
+                    IconButton(onClick = { showAdvancedPanel = true }) {
                         Icon(Icons.Default.Tune, contentDescription = "Advanced animation tools", tint = White)
                     }
+                    }
                     if (workspaceVisibility.proToolsWidget) {
-                    IconButton(onClick = { showProTools = true }
-                    }) {
+                    IconButton(onClick = { showProTools = true }) {
                         Icon(Icons.Default.AutoAwesome, contentDescription = "Pro tools", tint = PinkAccent)
+                    }
                     }
                     IconButton(onClick = onOpenMore) {
                         Icon(Icons.Default.MoreVert, contentDescription = "More tools / show-hide widgets", tint = PinkAccent)
@@ -1568,8 +1566,7 @@ fun EditorScreen(
 
                 if (workspaceVisibility.brushPresetsWidget) {
                 IconButton(
-                    onClick = { showBrushPresets = true }
-                },
+                    onClick = { showBrushPresets = true },
                     modifier = Modifier.background(Color.Transparent, CircleShape)
                 ) {
                     Icon(Icons.Default.AutoFixHigh, contentDescription = "Brush presets", tint = White)
