@@ -16,7 +16,7 @@
 #endif
 
 // Platform-specific includes
-#if defined(LINUX) || defined(FREEBSD)
+#if (defined(LINUX) || defined(FREEBSD)) && !defined(__ANDROID__)
 
 #include "qtofflinegl.h"
 #include <X11/Xlib.h>
