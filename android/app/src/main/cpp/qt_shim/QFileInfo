@@ -1,0 +1,13 @@
+#pragma once
+#include "QString"
+
+class QFileInfo {
+public:
+  QFileInfo() = default;
+  explicit QFileInfo(const QString &) {}
+  bool exists() const { return false; }
+  bool isDir() const { return false; }
+  bool isFile() const { return false; }
+  QString fileName() const { return QString(); }
+  QString absoluteFilePath() const { return QString(); }
+};
