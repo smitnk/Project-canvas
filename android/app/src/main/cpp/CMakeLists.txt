@@ -27,6 +27,34 @@ include_directories(
 )
 
 # ==========================================================
+# Real Android OpenGL compatibility dependencies
+# GL4ES supplies the desktop OpenGL 1.5/2.x API on GLES hardware.
+# FreeGLUT supplies the real GLUT API used by OpenToonz TGL.
+# Both are fetched at pinned upstream commits by the Android build workflow.
+# ==========================================================
+set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
+set(FREEGLUT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/freeglut)
+
+set(STATICLIB ON CACHE BOOL "" FORCE)
+set(DEFAULT_ES 2 CACHE STRING "" FORCE)
+set(NOX11 ON CACHE BOOL "" FORCE)
+set(NO_GBM ON CACHE BOOL "" FORCE)
+set(USE_ANDROID_LOG ON CACHE BOOL "" FORCE)
+add_subdirectory(${GL4ES_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gl4es)
+
+set(FREEGLUT_GLES ON CACHE BOOL "" FORCE)
+set(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
+set(FREEGLUT_REPLACE_GLUT ON CACHE BOOL "" FORCE)
+add_subdirectory(${FREEGLUT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/freeglut)
+
+include_directories(
+    ${GL4ES_SOURCE_DIR}/include
+    ${FREEGLUT_SOURCE_DIR}/include
+)
+
+# ==========================================================
 # REAL OPENTOONZ LOW-LEVEL DRAWING SOURCES
 # ==========================================================
 # These files already exist in the supplied project.
@@ -101,6 +129,8 @@ if(ANDROID)
         ${log-lib}
         ${jnigraphics-lib}
         ${gles2-lib}
+        GL
+        freeglut_static
     )
 endif()
 
