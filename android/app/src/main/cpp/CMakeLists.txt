@@ -31,7 +31,9 @@ include_directories(
 # Both are fetched at pinned upstream commits by the Android build workflow.
 # ==========================================================
 set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
-set(FREEGLUT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/freeglut)
+
+# Build the real GL4ES compatibility layer first.
+add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
 
 # Real Mesa GLU 9.0.3. Compile upstream GLU against GL4ES; no stubs.
 set(MESA_GLU_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glu)
@@ -57,7 +59,6 @@ target_link_libraries(mesa_glu PUBLIC GL)
 
 include_directories(
     ${GL4ES_SOURCE_DIR}/include
-    ${FREEGLUT_SOURCE_DIR}/include
 )
 
 # ==========================================================
