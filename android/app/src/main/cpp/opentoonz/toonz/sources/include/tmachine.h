@@ -7,7 +7,7 @@
 #define TNZ_MACHINE_CHANNEL_ORDER_BGRM 1
 #elif defined(__sgi)
 #define TNZ_MACHINE_CHANNEL_ORDER_MBGR 1
-#elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
+#elif defined(LINUX) || defined(FREEBSD) || defined(HAIKU) || defined(__ANDROID__)
 #define TNZ_MACHINE_CHANNEL_ORDER_BGRM 1
 #elif defined(MACOSX)
 #define TNZ_MACHINE_CHANNEL_ORDER_MRGB 1
