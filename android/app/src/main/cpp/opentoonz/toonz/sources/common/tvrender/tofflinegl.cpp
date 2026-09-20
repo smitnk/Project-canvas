@@ -10,6 +10,11 @@
 #include "tsystem.h"
 #include "trop.h"
 
+#if defined(__ANDROID__)
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#endif
+
 // Platform-specific includes
 #if defined(LINUX) || defined(FREEBSD)
 
@@ -498,6 +503,112 @@ Bool ret = glXMakeCurrent(m_dpy,
 static std::shared_ptr<TOfflineGL::Imp> defaultOfflineGLGenerator(
     const TDimension &dim, std::shared_ptr<TOfflineGL::Imp> shared) {
   return std::make_shared<QtOfflineGL>(dim, shared);
+}
+
+#elif defined(__ANDROID__)
+
+class AndroidEGLImplementation final : public TOfflineGL::Imp {
+  EGLDisplay m_display;
+  EGLSurface m_surface;
+  EGLContext m_context;
+  TRaster32P m_raster;
+
+public:
+  AndroidEGLImplementation(TDimension rasterSize,
+                           std::shared_ptr<TOfflineGL::Imp> shared)
+      : TOfflineGL::Imp(rasterSize.lx, rasterSize.ly),
+        m_display(EGL_NO_DISPLAY),
+        m_surface(EGL_NO_SURFACE),
+        m_context(EGL_NO_CONTEXT),
+        m_raster(rasterSize.lx, rasterSize.ly) {
+    createContext(rasterSize, std::move(shared));
+    glViewport(0, 0, rasterSize.lx, rasterSize.ly);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    doneCurrent();
+  }
+
+  ~AndroidEGLImplementation() override {
+    if (m_display != EGL_NO_DISPLAY) {
+      if (eglGetCurrentContext() == m_context)
+        eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+      if (m_context != EGL_NO_CONTEXT) eglDestroyContext(m_display, m_context);
+      if (m_surface != EGL_NO_SURFACE) eglDestroySurface(m_display, m_surface);
+      eglTerminate(m_display);
+    }
+    m_display = EGL_NO_DISPLAY;
+    m_surface = EGL_NO_SURFACE;
+    m_context = EGL_NO_CONTEXT;
+  }
+
+  void makeCurrent() override {
+    if (m_display == EGL_NO_DISPLAY || m_surface == EGL_NO_SURFACE ||
+        m_context == EGL_NO_CONTEXT ||
+        !eglMakeCurrent(m_display, m_surface, m_surface, m_context))
+      throw TException("cannot make Android EGL context current");
+  }
+
+  void doneCurrent() override {
+    if (m_display != EGL_NO_DISPLAY && m_context != EGL_NO_CONTEXT &&
+        eglGetCurrentContext() == m_context) {
+      glFlush();
+      eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+  }
+
+  void createContext(TDimension rasterSize,
+                     std::shared_ptr<TOfflineGL::Imp> shared) override {
+    (void)shared;
+    m_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (m_display == EGL_NO_DISPLAY || !eglInitialize(m_display, nullptr, nullptr))
+      throw TException("cannot initialize Android EGL");
+
+    const EGLint configAttrs[] = {
+        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8,
+        EGL_STENCIL_SIZE, 8,
+        EGL_NONE};
+    EGLConfig config = nullptr;
+    EGLint count = 0;
+    if (!eglChooseConfig(m_display, configAttrs, &config, 1, &count) || count == 0)
+      throw TException("cannot choose Android EGL config");
+
+    const EGLint pbufferAttrs[] = {
+        EGL_WIDTH, std::max(1, rasterSize.lx),
+        EGL_HEIGHT, std::max(1, rasterSize.ly),
+        EGL_NONE};
+    m_surface = eglCreatePbufferSurface(m_display, config, pbufferAttrs);
+    if (m_surface == EGL_NO_SURFACE)
+      throw TException("cannot create Android EGL pbuffer surface");
+
+    const EGLint contextAttrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    m_context = eglCreateContext(m_display, config, EGL_NO_CONTEXT, contextAttrs);
+    if (m_context == EGL_NO_CONTEXT)
+      throw TException("cannot create Android EGL context");
+
+    if (!eglMakeCurrent(m_display, m_surface, m_surface, m_context))
+      throw TException("cannot activate Android EGL context");
+  }
+
+  void getRaster(TRaster32P raster) override {
+    makeCurrent();
+    glFlush();
+    const int lx = raster->getLx();
+    const int ly = raster->getLy();
+    raster->lock();
+    glReadPixels(0, 0, lx, ly, GL_RGBA, GL_UNSIGNED_BYTE, raster->getRawData());
+    raster->unlock();
+    doneCurrent();
+  }
+
+  int getLx() const override { return m_raster->getLx(); }
+  int getLy() const override { return m_raster->getLy(); }
+};
+
+static std::shared_ptr<TOfflineGL::Imp> defaultOfflineGLGenerator(
+    const TDimension &dim, std::shared_ptr<TOfflineGL::Imp> shared) {
+  return std::make_shared<AndroidEGLImplementation>(dim, std::move(shared));
 }
 
 #elif defined(MACOSX) || defined(HAIKU)
