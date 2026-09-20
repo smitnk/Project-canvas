@@ -26,6 +26,10 @@ jobs:
           git clone --depth 1 https://github.com/ptitSeb/gl4es.git app/src/main/cpp/gl4es
           git -C app/src/main/cpp/gl4es fetch --depth 1 origin 81547d986798e876de8b434193920b606a72363f
           git -C app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
+          # GL4ES has a native Android backend: build its real desktop-GL
+          # compatibility API on top of Android GLES/EGL, not fake wrappers.
+          echo "Using pinned GL4ES Android backend for OpenToonz fixed-function GL"
+          grep -q "if(ANDROID)" app/src/main/cpp/gl4es/CMakeLists.txt
           git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git app/src/main/cpp/freeglut
           git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
           python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/src/android/native_app_glue/android_native_app_glue.c"); s=p.read_text(); needle="#include <errno.h>\n"; assert needle in s; s=s.replace(needle, needle+"#include <stdlib.h>\n", 1); p.write_text(s)'
