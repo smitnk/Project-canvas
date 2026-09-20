@@ -3552,7 +3552,22 @@ private fun AudioToolsDialog(project: Project,currentFrame:Int,isRecording:Boole
     AlertDialog(onDismissRequest=onDismiss,containerColor=PanelBackground,title={Text("Audio Track",color=White,fontWeight=FontWeight.Bold)},text={
         Column(verticalArrangement=Arrangement.spacedBy(10.dp)){
             Text(if(project.audioPath==null) "No audio clip attached" else "Clip attached",color=TextSecondary)
-            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){ Button(onClick=if(isRecording) onStopRecording else onStartRecording){Text(if(isRecording) "Stop" else "Record")} OutlinedButton(onClick=onPreview,enabled=project.audioPath!=null){Text("Preview")} OutlinedButton(onClick=onStopPreview){Text("Stop")}}
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = if (isRecording) onStopRecording else onStartRecording
+                ) {
+                    Text(if (isRecording) "Stop" else "Record")
+                }
+                OutlinedButton(
+                    onClick = onPreview,
+                    enabled = project.audioPath != null
+                ) {
+                    Text("Preview")
+                }
+                OutlinedButton(onClick = onStopPreview) {
+                    Text("Stop")
+                }
+            }
             Text("Starts at frame ${currentFrame+1}",color=TextSecondary,fontSize=12.sp)
             if(waveform.isNotEmpty()){Canvas(Modifier.fillMaxWidth().height(60.dp)){val step=size.width/waveform.size.coerceAtLeast(1);waveform.forEachIndexed{i,v->drawLine(PinkAccent,Offset(i*step,size.height/2-v*size.height/2),Offset(i*step,size.height/2+v*size.height/2),2f)}}}
             if(clip != null) {
