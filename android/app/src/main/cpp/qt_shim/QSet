@@ -1,0 +1,34 @@
+#ifndef QSET_SHIM_H
+#define QSET_SHIM_H
+
+#include <unordered_set>
+
+template <typename T>
+class QSet {
+public:
+    std::unordered_set<T> m_set;
+
+    QSet() = default;
+    bool contains(const T& value) const {
+        return m_set.find(value) != m_set.end();
+    }
+    void insert(const T& value) {
+        m_set.insert(value);
+    }
+    void remove(const T& value) {
+        m_set.erase(value);
+    }
+    bool isEmpty() const {
+        return m_set.empty();
+    }
+    size_t size() const {
+        return m_set.size();
+    }
+    void clear() {
+        m_set.clear();
+    }
+    auto begin() const { return m_set.begin(); }
+    auto end() const { return m_set.end(); }
+};
+
+#endif

@@ -1,0 +1,7 @@
+#pragma once
+class QChar {
+  char m_c;
+public:
+  QChar(char c = 0) : m_c(c) {}
+  operator char() const { return m_c; }
+};

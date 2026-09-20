@@ -1,0 +1,7 @@
+#pragma once
+class QGLContext {
+public:
+  static const QGLContext* currentContext() { return nullptr; }
+  void makeCurrent() {}
+  void doneCurrent() {}
+};

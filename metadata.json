@@ -1,0 +1,6 @@
+{
+  "name": "Project Canvas v29 - OpenToonz Engine",
+  "description": "Project Canvas animation studio integrated with the upstream OpenToonz native drawing engine, TStroke geometry, and StrokeGenerator interpolation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

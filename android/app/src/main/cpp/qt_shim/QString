@@ -1,0 +1,36 @@
+#pragma once
+#include <string>
+#include <cstdlib>
+#include "QChar"
+
+class QString : public std::string {
+public:
+  using std::string::string;
+  QString() = default;
+  QString(const std::string& s) : std::string(s) {}
+  QString(const char* s) : std::string(s ? s : "") {}
+  QString(size_t n, QChar c) : std::string(n, (char)c) {}
+
+  int toInt(bool *ok = nullptr) const {
+    char *end = nullptr;
+    long v = std::strtol(c_str(), &end, 10);
+    if (ok) *ok = (end != c_str());
+    return (int)v;
+  }
+  double toDouble(bool *ok = nullptr) const {
+    char *end = nullptr;
+    double v = std::strtod(c_str(), &end);
+    if (ok) *ok = (end != c_str());
+    return v;
+  }
+  static int localeAwareCompare(const QString& a, const QString& b) {
+    return a.compare(b);
+  }
+  std::string toStdString() const { return *this; }
+  static QString fromStdString(const std::string& s) { return QString(s); }
+  static QString fromUtf8(const char* s) { return QString(s); }
+  static QString fromStdWString(const std::wstring& ws) { return QString(ws.begin(), ws.end()); }
+  std::string toUtf8() const { return *this; }
+  std::string toLatin1() const { return *this; }
+  std::wstring toStdWString() const { return std::wstring(begin(), end()); }
+};

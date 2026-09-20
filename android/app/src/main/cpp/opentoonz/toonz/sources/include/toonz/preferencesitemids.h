@@ -1,0 +1,240 @@
+#ifndef PREFERENCESITEMIDS_H
+#define PREFERENCESITEMIDS_H
+
+enum PreferencesItemId {
+  // General
+  defaultViewerEnabled,
+  rasterOptimizedMemory,
+  startupPopupEnabled,
+  undoMemorySize,
+  taskchunksize,
+  sceneNumberingEnabled,
+  watchFileSystemEnabled,
+  projectRoot,
+  customProjectRoot,
+  pathAliasPriority,
+  lazyLoadRooms,
+
+  //----------
+  // Interface
+  CurrentStyleSheetName,
+  additionalStyleSheet,
+  iconTheme,
+  pixelsOnly,
+  oldUnits,
+  oldCameraUnits,
+  linearUnits,
+  cameraUnits,
+  CurrentRoomChoice,
+  functionEditorToggle,
+  moveCurrentFrameByClickCellArea,
+  actualPixelViewOnSceneEditingMode,
+  showRasterImagesDarkenBlendedInViewer,
+  iconSize,
+  viewShrink,
+  viewStep,
+  viewerZoomCenter,
+  CurrentLanguageName,
+  interfaceFont,
+  interfaceFontStyle,
+  colorCalibrationEnabled,
+  colorCalibrationLutPaths,
+  showIconsInMenu,
+  showRoomBindButtons,
+  displayIn30bit,
+  viewerIndicatorEnabled,
+
+  //----------
+  // Visualization
+  show0ThickLines,
+  regionAntialias,
+  rasterizeAntialias,
+
+  //----------
+  // Loading
+  importPolicy,
+  renamePolicy,
+  convertPolicy,
+  autoExposeEnabled,
+  subsceneFolderEnabled,
+  removeSceneNumberFromLoadedLevelName,
+  IgnoreImageDpi,
+  rasterLevelCachingBehavior,
+  // initialLoadTlvCachingBehavior, // deprecated
+  columnIconLoadingPolicy,
+  levelFormats,  // need to be handle separately
+  autoRemoveUnusedLevels,
+
+  //----------
+  // Saving
+  autosaveEnabled,
+  autosavePeriod,
+  autosaveSceneEnabled,
+  autosaveOtherFilesEnabled,
+  replaceAfterSaveLevelAs,
+  backupEnabled,
+  backupKeepCount,
+  rasterBackgroundColor,
+  resetUndoOnSavingLevel,
+
+  //----------
+  // Import / Export
+  ffmpegPath,
+  ffmpegTimeout,
+  fastRenderPath,
+  ffmpegMultiThread,
+  quickTimeBackend,
+  rhubarbPath,
+  rhubarbTimeout,
+
+  //----------
+  // Drawing
+  DefRasterFormat,
+  // scanLevelType,// deprecated
+  DefLevelType,
+  newLevelSizeToCameraSizeEnabled,
+  DefLevelWidth,
+  DefLevelHeight,
+  DefLevelDpi,
+  // AutocreationType,// deprecated
+  EnableAutocreation,
+  NumberingSystem,
+  EnableAutoStretch,
+  EnableCreationInHoldCells,
+  EnableAutoRenumber,
+  vectorSnappingTarget,
+  saveUnpaintedInCleanup,
+  minimizeSaveboxAfterEditing,
+  useNumpadForSwitchingStyles,
+  downArrowInLevelStripCreatesNewFrame,
+  keepFillOnVectorSimplify,
+  useHigherDpiOnVectorSimplify,
+
+  //----------
+  // Tools
+  // dropdownShortcutsCycleOptions, // removed
+  FillOnlysavebox,
+  DefRegionWithPaint,
+  ReferFillPrevailing,
+  multiLayerStylePickerEnabled,
+  cursorBrushType,
+  cursorBrushStyle,
+  cursorOutlineEnabled,
+  levelBasedToolsDisplay,
+  useCtrlAltToResizeBrush,
+  useStrokeEndCursor,
+  clickTwiceToCreateArcs,
+  tempToolSwitchTimer,
+  animateToolHandleSize,
+  animateToolColor,
+
+  //----------
+  // Xsheet
+  xsheetLayoutPreference,
+  xsheetStep,
+  xsheetAutopanEnabled,
+  alwaysDragFrameCell,
+  DragCellsBehaviour,
+  deleteCommandBehavior,
+  pasteCellsBehavior,
+  ignoreAlphaonColumn1Enabled,
+  showKeyframesOnXsheetCellArea,
+  showXsheetCameraColumn,
+  useArrowKeyToShiftCellSelection,
+  cellInputMethod,
+  shortcutCommandsWhileRenamingCellEnabled,
+  showXSheetToolbar,
+  showXsheetBreadcrumbs,
+  expandFunctionHeader,
+  showColumnNumbers,
+  unifyColumnVisibilityToggles,
+  parentColorsInXsheetColumn,
+  highlightLineEverySecond,
+  syncLevelRenumberWithXsheet,
+  currentTimelineEnabled,
+  currentColumnColor,
+  levelNameDisplayType,
+  showFrameNumberWithLetters,
+  linkColumnNameWithLevel,
+
+  //----------
+  // Animation
+  keyframeType,
+  animationStep,
+  modifyExpressionOnMovingReferences,
+
+  //----------
+  // Preview
+  blanksCount,
+  blankColor,
+  rewindAfterPlayback,
+  previewAlwaysOpenNewFlip,
+  fitToFlipbookWhenPreview,
+  generatedMovieViewEnabled,
+  shortPlayFrameCount,
+
+  //----------
+  // Onion Skin
+  onionSkinEnabled,
+  onionPaperThickness,
+  backOnionColor,
+  frontOnionColor,
+  onionInksOnly,
+  onionSkinDuringPlayback,
+  useOnionColorsForShiftAndTraceGhosts,
+  animatedGuidedDrawing,
+
+  //----------
+  // Colors
+  viewerBGColor,
+  previewBGColor,
+  levelEditorBoxColor,
+  chessboardColor1,
+  chessboardColor2,
+  transpCheckInkOnWhite,
+  transpCheckInkOnBlack,
+  transpCheckPaint,
+  inkCheckColor,
+  ink1CheckColor,
+  paintCheckColor,
+
+  //----------
+  // Version Control
+  SVNEnabled,
+  automaticSVNFolderRefreshEnabled,
+  latestVersionCheckEnabled,
+
+  //----------
+  // Touch / Tablet Settings
+  // TounchGestureControl // Touch Gesture is a checkable command and not in
+  // preferences.ini
+  winInkEnabled,
+  // This option will be shown & available only when WITH_WINTAB is defined
+  useQtNativeWinInk,
+
+  //----------
+  // Others (not appeared in the popup)
+  // Shortcut popup settings
+  shortcutPreset,
+  // Viewer context menu
+  guidedDrawingType,
+  guidedAutoInbetween,
+  guidedInterpolationType,
+  // OSX shared memory settings
+  shmmax,
+  shmseg,
+  shmall,
+  shmmni,
+  //- obsoleted / unused members
+  // interfaceFontWeight,
+  // autoCreateEnabled,
+  // animationSheetEnabled,
+  // askForOverrideRender,
+  // textureSize, // set to 0
+  // LineTestFpsCapture,
+  // guidedDrawingType,
+
+  PreferencesItemCount
+};
+
+#endif
