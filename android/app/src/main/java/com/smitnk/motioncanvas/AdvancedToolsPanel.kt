@@ -6,6 +6,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.smitnk.motioncanvas.animation.*
+import com.smitnk.motioncanvas.tools.ParticleEngine
+import com.smitnk.motioncanvas.tools.ParticleEmitter
 import com.smitnk.motioncanvas.camera.Camera2D
 import com.smitnk.motioncanvas.selection.MultiFrameTransform
 
