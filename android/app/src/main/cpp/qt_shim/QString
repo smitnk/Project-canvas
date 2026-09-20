@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cctype>
 #include <algorithm>
+#include <codecvt>
+#include <locale>
 #include "QChar"
 
 namespace Qt {
@@ -19,6 +21,7 @@ public:
   QString(const std::string& s) : std::string(s) {}
   QString(const char* s) : std::string(s ? s : "") {}
   QString(size_t n, QChar c) : std::string(n, (char)c) {}
+  explicit QString(QChar c) : std::string(1, (char)c) {}
 
   int toInt(bool *ok = nullptr) const {
     char *end = nullptr;
@@ -64,12 +67,30 @@ public:
   std::string toStdString() const { return *this; }
   static QString fromStdString(const std::string& s) { return QString(s); }
   static QString fromUtf8(const char* s) { return QString(s); }
+
   static QString fromStdWString(const std::wstring& ws) {
-    return QString(ws.begin(), ws.end());
+    try {
+      std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+      return QString(converter.to_bytes(ws));
+    } catch (...) {
+      QString result;
+      for (wchar_t c : ws)
+        result.push_back(static_cast<char>(c < 128 ? c : '?'));
+      return result;
+    }
   }
+
   std::string toUtf8() const { return *this; }
   std::string toLatin1() const { return *this; }
-  std::wstring toStdWString() const { return std::wstring(begin(), end()); }
+
+  std::wstring toStdWString() const {
+    try {
+      std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+      return converter.from_bytes(*this);
+    } catch (...) {
+      return std::wstring(begin(), end());
+    }
+  }
 
   bool isNull() const { return empty(); }
 
