@@ -1094,6 +1094,7 @@ fun arrowPoints(start: Offset, end: Offset): List<Offset> {
     return listOf(start, end, p1, end, p2)
 }
 
+@Composable
 fun EditorScreen(
     project: Project,
     frameIndex: Int,
