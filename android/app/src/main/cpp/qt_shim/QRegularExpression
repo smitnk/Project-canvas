@@ -1,0 +1,35 @@
+#pragma once
+#include <regex>
+#include <string>
+#include "QString"
+
+class QRegularExpressionMatch {
+public:
+  QRegularExpressionMatch() = default;
+  explicit QRegularExpressionMatch(const std::smatch &m) : m_match(m), m_valid(true) {}
+  bool hasMatch() const { return m_valid; }
+  QString captured(int index) const {
+    if (!m_valid || index < 0 || index >= static_cast<int>(m_match.size())) return QString();
+    return QString(m_match[static_cast<size_t>(index)].str());
+  }
+private:
+  std::smatch m_match;
+  bool m_valid = false;
+};
+
+class QRegularExpression {
+public:
+  QRegularExpression() = default;
+  explicit QRegularExpression(const QString &pattern) : m_pattern(pattern) {}
+  explicit QRegularExpression(const char *pattern) : m_pattern(pattern) {}
+  QRegularExpressionMatch match(const QString &text) const {
+    try {
+      std::smatch m;
+      if (std::regex_search(text, m, std::regex(m_pattern))) return QRegularExpressionMatch(m);
+    } catch (...) {
+    }
+    return QRegularExpressionMatch();
+  }
+private:
+  std::string m_pattern;
+};
