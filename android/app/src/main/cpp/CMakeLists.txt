@@ -71,8 +71,8 @@ target_compile_definitions(mesa_glu PRIVATE
     NDEBUG
 )
 target_compile_options(mesa_glu PRIVATE
-    -include assert.h
-    -include limits.h
+    "SHELL:-include assert.h"
+    "SHELL:-include limits.h"
 )
 
 target_link_libraries(mesa_glu PUBLIC GL)
