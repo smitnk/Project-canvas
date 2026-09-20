@@ -1503,6 +1503,8 @@ fun EditorScreen(
                         Icon(Icons.Default.AutoAwesome, contentDescription = "Pro tools", tint = PinkAccent)
                     }
                     }
+                    }
+
                     IconButton(onClick = onOpenMore) {
                         Icon(Icons.Default.MoreVert, contentDescription = "More tools / show-hide widgets", tint = PinkAccent)
                     }
