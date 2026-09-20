@@ -36,18 +36,15 @@ jobs:
           from pathlib import Path
           p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
           s = p.read_text()
-          needle = "ELSE()\\nLIST(APPEND FREEGLUT_SRCS\\nsrc/gles_stubs.c\\n)"
-          repl = "ELSE()\\nLIST(APPEND FREEGLUT_SRCS\\nsrc/fg_font.c\\nsrc/fg_menu.c\\n)"
-          assert needle in s
-          p.write_text(s.replace(needle, repl, 1))
-          PY
-          python3 <<'PY'
-          from pathlib import Path
-          p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
-          s = p.read_text()
-          start = s.index("IF(FREEGLUT_GLES)")
-          end = s.index("\nENDIF()\n\n# For Wayland", start) + len("\nENDIF()")
-          block = """IF(FREEGLUT_GLES)
+          s = s.replace(
+              "        src/gles_stubs.c\n",
+              "        src/fg_font.c\n        src/fg_menu.c\n",
+              1,
+          )
+          start = s.index("# For OpenGL ES (GLES):")
+          end = s.index("# For Wayland:", start)
+          block = """# For OpenGL ES (GLES): Android uses the real EGL backend.
+          IF(FREEGLUT_GLES)
               LIST(APPEND PUBLIC_DEFINITIONS -DFREEGLUT_GLES)
               if(ANDROID)
                 find_library(_FG_EGL_LIBRARY EGL REQUIRED)
@@ -66,7 +63,9 @@ jobs:
                 FIND_LIBRARY(GLES2_LIBRARY GLESv2 HINTS ${_OPENGL_LIBDIR})
                 LIST(APPEND LIBS ${GLES1_LIBRARY} ${GLES2_LIBRARY} OpenGL::EGL OpenGL::OpenGL)
               endif()
-          ENDIF()"""
+          ENDIF()
+
+          """
           p.write_text(s[:start] + block + s[end:])
           PY
 
