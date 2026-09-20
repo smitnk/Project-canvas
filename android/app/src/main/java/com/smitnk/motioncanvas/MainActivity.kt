@@ -2025,11 +2025,11 @@ fun EditorScreen(
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
-                                for (y in 0 until (size.height / step).toInt()) {
+                                for (y in 0 until (canvasSize.height / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(0f, y * step),
-                                        end = Offset(size.width, y * step),
+                                        end = Offset(canvasSize.width, y * step),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
