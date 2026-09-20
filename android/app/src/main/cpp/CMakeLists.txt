@@ -41,6 +41,15 @@ file(GLOB_RECURSE MESA_GLU_SOURCES CONFIGURE_DEPENDS
     ${MESA_GLU_SOURCE_DIR}/src/*.c
     ${MESA_GLU_SOURCE_DIR}/src/*.cc
 )
+
+# priorityq-heap.c is textually included by priorityq.c in Mesa GLU.
+# Do not compile it as a second translation unit: that would expose
+# implementation-only dependencies and can produce duplicate symbols.
+set(MESA_GLU_PRIORITYQ_HEAP
+    ${MESA_GLU_SOURCE_DIR}/src/libtess/priorityq-heap.c
+)
+list(REMOVE_ITEM MESA_GLU_SOURCES ${MESA_GLU_PRIORITYQ_HEAP})
+
 add_library(mesa_glu STATIC ${MESA_GLU_SOURCES})
 target_include_directories(mesa_glu PUBLIC
     ${MESA_GLU_SOURCE_DIR}/include
