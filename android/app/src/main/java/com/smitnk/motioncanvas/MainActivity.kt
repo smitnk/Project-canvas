@@ -20,6 +20,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -1165,6 +1166,9 @@ fun EditorScreen(
     val recorder = remember { AudioRecorderController(context) }
     val audioPreview = remember { AudioPreviewController(context) }
     var isRecording by remember { mutableStateOf(false) }
+    var waveform by remember { mutableStateOf<List<Float>>(emptyList()) }
+    var rotoscopeFrames by remember { mutableStateOf<List<ImageBitmap>>(emptyList()) }
+    var rotoscopeMaxFrames by remember { mutableIntStateOf(120) }
     val recordPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted && !isRecording) { recorder.start(); isRecording = true }
     }
