@@ -1515,7 +1515,6 @@ fun EditorScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground)
             )
-            }
         },
         bottomBar = {
             if (workspaceVisibility.timeline) {
