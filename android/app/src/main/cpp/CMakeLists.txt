@@ -133,6 +133,16 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     # Vector image/style sources already present in v29
     # ------------------------------------------------------
     opentoonz/toonz/sources/common/tvectorimage/tvectorimage.cpp
+    opentoonz/toonz/sources/common/tvectorimage/tcomputeregions.cpp
+
+    # Missing but required implementations in the OpenToonz v1.8.0 dependency chain
+    opentoonz/toonz/sources/common/timage/timage.cpp
+    opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
+    opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
+    opentoonz/toonz/sources/common/tvrender/tpalette.cpp
+    opentoonz/toonz/sources/common/tvrender/tsimplecolorstyles.cpp
+    opentoonz/toonz/sources/common/tvrender/tofflinegl.cpp
+
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
 
     # ------------------------------------------------------
