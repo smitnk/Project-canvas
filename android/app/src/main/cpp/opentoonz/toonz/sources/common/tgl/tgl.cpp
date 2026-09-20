@@ -61,16 +61,6 @@ int computeSlices(double radius, double pixelSize = 1.0) {
 }
 //-----------------------------------------------------------------------------
 
-double tglGetPixelSize2() {
-  double mat[16];
-  glMatrixMode(GL_MODELVIEW);
-  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
-
-  double det = fabs(mat[0] * mat[5] - mat[1] * mat[4]);
-  if (det < TConsts::epsilon) det = TConsts::epsilon;
-  return 1.0 / det;
-}
-
 //-----------------------------------------------------------------------------
 
 TRectD tglGetBounds() {
@@ -386,6 +376,20 @@ glScaled(scale.lx*0.07, scale.ly*0.07, 1.0);
 //============================================================================
 
 }  // anonymous namespace
+
+//============================================================================
+
+// Public TGL API declared by tgl.h. Keep this definition in the global
+// namespace so it does not conflict with the exported declaration.
+double tglGetPixelSize2() {
+  double mat[16];
+  glMatrixMode(GL_MODELVIEW);
+  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+
+  double det = fabs(mat[0] * mat[5] - mat[1] * mat[4]);
+  if (det < TConsts::epsilon) det = TConsts::epsilon;
+  return 1.0 / det;
+}
 
 //============================================================================
 
