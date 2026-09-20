@@ -1,0 +1,10 @@
+#pragma once
+#include "QString"
+
+class QDir {
+public:
+  QDir() = default;
+  explicit QDir(const QString &) {}
+  QString path() const { return QString(); }
+  bool exists() const { return false; }
+};
