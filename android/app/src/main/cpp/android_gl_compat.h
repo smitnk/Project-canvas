@@ -7,6 +7,9 @@ typedef double GLdouble;
 #ifndef GL_LINE
 #define GL_LINE 0x1B01
 #endif
+#ifndef GL_POLYGON
+#define GL_POLYGON 0x0009
+#endif
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
