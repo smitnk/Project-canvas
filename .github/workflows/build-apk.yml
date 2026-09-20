@@ -36,37 +36,54 @@ jobs:
           from pathlib import Path
           p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
           s = p.read_text()
+          s = s.replace("        src/gles_stubs.c\n", "        src/fg_font.c\n        src/fg_menu.c\n", 1)
           s = s.replace(
-              "        src/gles_stubs.c\n",
-              "        src/fg_font.c\n        src/fg_menu.c\n",
+              "IF(FREEGLUT_GLES OR FREEGLUT_WAYLAND)",
+              "IF(FREEGLUT_GLES OR ANDROID OR FREEGLUT_WAYLAND)",
               1,
           )
-          start = s.index("# For OpenGL ES (GLES):")
-          end = s.index("# For Wayland:", start)
-          block = """# For OpenGL ES (GLES): Android uses the real EGL backend.
-          IF(FREEGLUT_GLES)
-              LIST(APPEND PUBLIC_DEFINITIONS -DFREEGLUT_GLES)
-              if(ANDROID)
-                find_library(_FG_EGL_LIBRARY EGL REQUIRED)
-                find_library(_FG_GLES2_LIBRARY GLESv2 REQUIRED)
-                find_library(_FG_GLES1_LIBRARY GLESv1_CM)
-                LIST(APPEND LIBS ${_FG_GLES1_LIBRARY} ${_FG_EGL_LIBRARY} ${_FG_GLES2_LIBRARY})
-              elseif(NOT CMAKE_VERSION VERSION LESS "3.27")
-                FIND_PACKAGE(OpenGL REQUIRED COMPONENTS EGL GLES2 OpenGL)
-                CMAKE_PATH(GET OPENGL_gles2_LIBRARY PARENT_PATH _OPENGL_LIBDIR)
-                FIND_LIBRARY(GLES1_LIBRARY GLESv1_CM HINTS ${_OPENGL_LIBDIR} REQUIRED)
-                LIST(APPEND LIBS ${GLES1_LIBRARY} OpenGL::EGL OpenGL::GLES2 OpenGL::OpenGL)
-              else()
-                FIND_PACKAGE(OpenGL REQUIRED COMPONENTS EGL OpenGL)
-                GET_FILENAME_COMPONENT(_OPENGL_LIBDIR ${OPENGL_egl_LIBRARY} DIRECTORY)
-                FIND_LIBRARY(GLES1_LIBRARY GLESv1_CM HINTS ${_OPENGL_LIBDIR})
-                FIND_LIBRARY(GLES2_LIBRARY GLESv2 HINTS ${_OPENGL_LIBDIR})
-                LIST(APPEND LIBS ${GLES1_LIBRARY} ${GLES2_LIBRARY} OpenGL::EGL OpenGL::OpenGL)
-              endif()
-          ENDIF()
+          old = """    if(NOT CMAKE_VERSION VERSION LESS "3.10")
+      FIND_PACKAGE(OpenGL REQUIRED COMPONENTS OpenGL)
+      LIST(APPEND LIBS OpenGL::GL)
+    else()
+      FIND_PACKAGE(OpenGL REQUIRED)
+      LIST(APPEND LIBS ${OPENGL_gl_LIBRARY})
+      INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
+    endif()
 
-          """
-          p.write_text(s[:start] + block + s[end:])
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      # CMake 3.29 properly locates the include directory for glu.h in the OPENGL_GLU_INCLUDE_DIR variable for us.
+      if(CMAKE_VERSION VERSION_LESS "3.29")
+        FIND_PATH(OPENGL_GLU_INCLUDE_DIR NAMES GL/glu.h OpenGL/glu.h HINTS ${OPENGL_INCLUDE_DIR})
+      endif()
+      if(NOT OPENGL_GLU_INCLUDE_DIR)
+        message(FATAL_ERROR "Failed to find the glu.h header file.")
+      endif()
+      INCLUDE_DIRECTORIES(${OPENGL_GLU_INCLUDE_DIR})
+    endif()"""
+          new = """    if(ANDROID)
+      LIST(APPEND LIBS GL)
+    elseif(NOT CMAKE_VERSION VERSION LESS "3.10")
+      FIND_PACKAGE(OpenGL REQUIRED COMPONENTS OpenGL)
+      LIST(APPEND LIBS OpenGL::GL)
+    else()
+      FIND_PACKAGE(OpenGL REQUIRED)
+      LIST(APPEND LIBS ${OPENGL_gl_LIBRARY})
+      INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
+    endif()
+
+    if(NOT ANDROID AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      if(CMAKE_VERSION VERSION_LESS "3.29")
+        FIND_PATH(OPENGL_GLU_INCLUDE_DIR NAMES GL/glu.h OpenGL/glu.h HINTS ${OPENGL_INCLUDE_DIR})
+      endif()
+      if(NOT OPENGL_GLU_INCLUDE_DIR)
+        message(FATAL_ERROR "Failed to find the glu.h header file.")
+      endif()
+      INCLUDE_DIRECTORIES(${OPENGL_GLU_INCLUDE_DIR})
+    endif()"""
+          assert old in s
+          s = s.replace(old, new, 1)
+          p.write_text(s)
           PY
 
       - name: Set up JDK 17
