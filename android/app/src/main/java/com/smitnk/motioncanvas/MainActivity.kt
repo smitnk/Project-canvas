@@ -691,6 +691,7 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground)
             )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
