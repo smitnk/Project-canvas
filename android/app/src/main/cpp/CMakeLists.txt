@@ -34,6 +34,25 @@ include_directories(
 set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
 set(FREEGLUT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/freeglut)
 
+# Real Mesa GLU 9.0.3. Compile upstream GLU against GL4ES; no stubs.
+set(MESA_GLU_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glu)
+file(GLOB_RECURSE MESA_GLU_SOURCES CONFIGURE_DEPENDS
+    ${MESA_GLU_SOURCE_DIR}/src/*.c
+    ${MESA_GLU_SOURCE_DIR}/src/*.cc
+)
+add_library(mesa_glu STATIC ${MESA_GLU_SOURCES})
+target_include_directories(mesa_glu PUBLIC
+    ${MESA_GLU_SOURCE_DIR}/include
+    ${MESA_GLU_SOURCE_DIR}/src/include
+    ${MESA_GLU_SOURCE_DIR}/src/libnurbs/interface
+    ${MESA_GLU_SOURCE_DIR}/src/libnurbs/internals
+    ${MESA_GLU_SOURCE_DIR}/src/libnurbs/nurbtess
+    ${MESA_GLU_SOURCE_DIR}/src/libtess
+    ${MESA_GLU_SOURCE_DIR}/src/libutil
+    ${GL4ES_SOURCE_DIR}/include
+)
+target_link_libraries(mesa_glu PUBLIC GL)
+
 # FreeGLUT 3.8.0 asks CMake 3.22 for a desktop OpenGL package even in its
 # Android GLES path. Map that package to the real GL4ES + Android EGL stack.
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -139,6 +158,7 @@ if(ANDROID)
         ${gles2-lib}
         ${egl-lib}
         GL
+        mesa_glu
         freeglut_static
     )
 endif()
