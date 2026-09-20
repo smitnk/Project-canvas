@@ -65,12 +65,16 @@ import com.smitnk.motioncanvas.colorpicker.*
 import com.smitnk.motioncanvas.selection.*
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import com.smitnk.motioncanvas.fill.FloodFillEngine
 import com.smitnk.motioncanvas.selection.LassoSelection
@@ -1053,7 +1057,6 @@ private fun pressureAdjustedWidth(base: Float, points: List<DrawPoint>): Float {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun shapePoints(type: ShapeType, start: Offset, end: Offset): List<Offset> {
     val left = minOf(start.x, end.x)
     val right = maxOf(start.x, end.x)
@@ -1142,6 +1145,8 @@ fun EditorScreen(
     onOpenMore: () -> Unit = {}
 ) {
     val currentFrame = project.frames.getOrNull(frameIndex) ?: project.frames.first()
+    // Layer selection is not yet exposed by EditorScreen; keep drawing on the base layer until the layer UI supplies an index.
+    val selectedLayerIndex = 0
     val history = remember(currentFrame.id) { FrameDrawingHistory(currentFrame) }
     var currentDrawingPoints = remember { mutableStateListOf<DrawPoint>() }
     var currentOpenToonzPreview by remember { mutableStateOf<OpenToonzDrawingEngine.GeneratedStroke?>(null) }
@@ -2005,17 +2010,18 @@ fun EditorScreen(
                     }
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
+                    val canvasSize = drawContext.size
                     // Apply zoom and pan transformation to canvas rendering
                     translate(left = zoomPanState.pan.x, top = zoomPanState.pan.y) {
                         scale(scale = zoomPanState.zoom, pivot = Offset.Zero) {
                             // Grid
                             if (grid) {
                                 val step = 40.dp.toPx()
-                                for (x in 0 until (size.width / step).toInt()) {
+                                for (x in 0 until (canvasSize.width / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(x * step, 0f),
-                                        end = Offset(x * step, size.height),
+                                        end = Offset(x * step, canvasSize.height),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
@@ -2093,7 +2099,7 @@ fun EditorScreen(
                                     item.y + item.size,
                                     android.graphics.Paint().apply {
                                         isAntiAlias = true
-                                        color = item.color.toArgb()
+                                        this.color = item.color.toArgb()
                                         textSize = item.size
                                         typeface = android.graphics.Typeface.DEFAULT
                                     }
@@ -2110,7 +2116,12 @@ fun EditorScreen(
                                     bp.color = if (s.isEraser) project.backgroundColor.toArgb() else s.color.copy(alpha = s.alpha).toArgb(); bp.strokeWidth = s.strokeWidth
                                     val path = android.graphics.Path(); s.points.firstOrNull()?.let { path.moveTo(it.x,it.y) }; s.points.drop(1).forEach { path.lineTo(it.x,it.y) }; bc.drawPath(path,bp)
                                 }
-                                currentFrame.fills.forEach { mark -> FloodFillEngine.fill(fillBitmap, project.canvasW, project.canvasH, mark.x, mark.y, mark.color.toArgb(), mark.tolerance) }
+                                val fillPixels = IntArray(project.canvasW * project.canvasH)
+                                fillBitmap.getPixels(fillPixels, 0, project.canvasW, 0, 0, project.canvasW, project.canvasH)
+                                currentFrame.fills.forEach { mark ->
+                                    FloodFillEngine.fill(fillPixels, project.canvasW, project.canvasH, mark.x, mark.y, mark.color.toArgb(), mark.tolerance)
+                                }
+                                fillBitmap.setPixels(fillPixels, 0, project.canvasW, 0, 0, project.canvasW, project.canvasH)
                                 drawImage(fillBitmap.asImageBitmap())
                             }
 
