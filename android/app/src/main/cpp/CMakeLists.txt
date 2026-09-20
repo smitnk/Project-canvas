@@ -52,6 +52,19 @@ target_include_directories(mesa_glu PUBLIC
     ${MESA_GLU_SOURCE_DIR}/src/libutil
     ${GL4ES_SOURCE_DIR}/include
 )
+# Mesa GLU's legacy NURBS sources assume assert() is available through the
+# historical build environment. Android/Clang does not implicitly provide it.
+# Build GLU as a release-style utility library so its internal debug-only
+# _glu_dprintf() calls are excluded, while still providing assert().
+target_compile_definitions(mesa_glu PRIVATE
+    LIBRARYBUILD
+    _GNU_SOURCE
+    NDEBUG
+)
+target_compile_options(mesa_glu PRIVATE
+    -include assert.h
+)
+
 target_link_libraries(mesa_glu PUBLIC GL)
 
 # FreeGLUT is intentionally not part of the Android drawing path.
