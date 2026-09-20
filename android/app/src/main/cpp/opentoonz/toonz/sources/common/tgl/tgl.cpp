@@ -21,7 +21,7 @@
 #endif
 #endif
 
-#if defined(MACOSX) || defined(LINUX) || defined(FREEBSD) || defined(HAIKU)
+#if !defined(__ANDROID__) && (defined(MACOSX) || defined(LINUX) || defined(FREEBSD) || defined(HAIKU))
 #include <QGLContext>
 #endif
 
