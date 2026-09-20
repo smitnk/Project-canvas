@@ -677,7 +677,6 @@ fun HomeScreen(
     Scaffold(
         containerColor = AppBackground,
         topBar = {
-            if (workspaceVisibility.topBar) {
             TopAppBar(
                 title = { Text("MotionCanvas", color = White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
@@ -692,7 +691,6 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground)
             )
-            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -3577,4 +3575,6 @@ private fun AudioToolsDialog(project: Project,currentFrame:Int,isRecording:Boole
             }){Text("Apply")}
         }
     })
+}
+
 }
