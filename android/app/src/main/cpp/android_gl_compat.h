@@ -60,3 +60,11 @@ static inline void glEnd() {}
 #ifndef glPointSize
 static inline void glPointSize(GLfloat) {}
 #endif
+
+#ifndef glPushMatrix
+static inline void glPushMatrix() {}
+#endif
+
+#ifndef glPopMatrix
+static inline void glPopMatrix() {}
+#endif
