@@ -410,6 +410,7 @@ fun MotionCanvasApp() {
                     val x = target % period
                     target = if (x < total) x else period - x
                 }
+            },
             }
             currentFrameIndex = target.coerceIn(0, total - 1)
             sharedAudioClock.seekToFrame(currentFrameIndex)
