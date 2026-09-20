@@ -20,6 +20,12 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvrender
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgeometry
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcolor
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcolor
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/toonzlib
 )
 
@@ -61,6 +67,14 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
 
+    # Recovered OpenToonz v1.8.0 implementations required by the drawing dependency chain
+    opentoonz/toonz/sources/common/traster/traster.cpp
+    opentoonz/toonz/sources/common/tcolor/tpixel.cpp
+    opentoonz/toonz/sources/common/tvrender/tsimplecolorstyles.cpp
+    opentoonz/toonz/sources/common/tvrender/tvectorbrush.cpp
+    opentoonz/toonz/sources/common/tgl/tgl.cpp
+    opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
+
     # ------------------------------------------------------
     # Vector image/style sources already present in v29
     # ------------------------------------------------------
@@ -83,11 +97,13 @@ add_library(
 if(ANDROID)
     find_library(log-lib log)
     find_library(jnigraphics-lib jnigraphics)
+    find_library(gles2-lib GLESv2)
 
     target_link_libraries(
         opentoonz_drawing_engine
         ${log-lib}
         ${jnigraphics-lib}
+        ${gles2-lib}
     )
 endif()
 
