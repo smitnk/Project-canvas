@@ -59,8 +59,6 @@ int computeSlices(double radius, double pixelSize = 1.0) {
 
   return numberOfSlices != 0 ? numberOfSlices : 2;
 }
-}  // end of unnamed namespace
-
 //-----------------------------------------------------------------------------
 
 double tglGetPixelSize2() {
