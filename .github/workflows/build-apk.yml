@@ -28,6 +28,42 @@ jobs:
           git -C app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
           git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git app/src/main/cpp/freeglut
           git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
+          s = p.read_text()
+          old = """IF(FREEGLUT_GLES)
+    LIST(APPEND PUBLIC_DEFINITIONS -DFREEGLUT_GLES)
+    if(NOT CMAKE_VERSION VERSION_LESS "3.27")
+"""
+          new = """IF(FREEGLUT_GLES)
+    LIST(APPEND PUBLIC_DEFINITIONS -DFREEGLUT_GLES)
+    if(ANDROID)
+      find_library(_FG_EGL_LIBRARY EGL REQUIRED)
+      find_library(_FG_GLES2_LIBRARY GLESv2 REQUIRED)
+      find_library(_FG_GLES1_LIBRARY GLESv1_CM)
+      LIST(APPEND LIBS ${_FG_EGL_LIBRARY} ${_FG_GLES2_LIBRARY} ${_FG_GLES1_LIBRARY})
+    elseif(NOT CMAKE_VERSION VERSION_LESS "3.27")
+"""
+          if old not in s:
+              raise SystemExit("FreeGLUT GLES CMake block not found")
+          s = s.replace(old, new, 1)
+          end = """    endif()
+ELSE()
+"""
+          # Close the Android-specific branch before FreeGLUT's existing ELSE.
+          marker = """      LIST(APPEND LIBS ${GLES1_LIBRARY} ${GLES2_LIBRARY} OpenGL::EGL OpenGL::OpenGL)
+    endif()
+ELSE()
+"""
+          replacement = """      LIST(APPEND LIBS ${GLES1_LIBRARY} ${GLES2_LIBRARY} OpenGL::EGL OpenGL::OpenGL)
+    endif()
+ELSE()
+"""
+          if marker not in s:
+              raise SystemExit("FreeGLUT GLES tail not found")
+          p.write_text(s)
+          PY
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
