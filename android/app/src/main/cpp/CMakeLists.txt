@@ -45,14 +45,17 @@ set(NO_GBM ON CACHE BOOL "" FORCE)
 set(USE_ANDROID_LOG ON CACHE BOOL "" FORCE)
 add_subdirectory(${GL4ES_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gl4es)
 
-set(FREEGLUT_GLES ON CACHE BOOL "" FORCE)
+set(FREEGLUT_GLES OFF CACHE BOOL "" FORCE)
+# FreeGLUT must use the real GL4ES desktop OpenGL header/API. Android platform
+# support still uses EGL through its native Android sources; only the GLES
+# header/bootstrap mode is disabled here.
 set(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 set(FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
 set(FREEGLUT_REPLACE_GLUT ON CACHE BOOL "" FORCE)
 add_subdirectory(${FREEGLUT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/freeglut)
 
-target_include_directories(freeglut_static PRIVATE ${GL4ES_SOURCE_DIR}/include)
+target_include_directories(freeglut_static BEFORE PRIVATE ${GL4ES_SOURCE_DIR}/include)
 
 include_directories(
     ${GL4ES_SOURCE_DIR}/include
@@ -126,12 +129,14 @@ if(ANDROID)
     find_library(log-lib log)
     find_library(jnigraphics-lib jnigraphics)
     find_library(gles2-lib GLESv2)
+    find_library(egl-lib EGL)
 
     target_link_libraries(
         opentoonz_drawing_engine
         ${log-lib}
         ${jnigraphics-lib}
         ${gles2-lib}
+        ${egl-lib}
         GL
         freeglut_static
     )
