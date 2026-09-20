@@ -1,0 +1,8 @@
+#pragma once
+#include "QString"
+
+class QObject {
+public:
+  virtual ~QObject() = default;
+  static QString tr(const char *text) { return QString(text); }
+};
