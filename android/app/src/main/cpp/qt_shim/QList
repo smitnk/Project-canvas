@@ -1,0 +1,13 @@
+#pragma once
+#include <vector>
+#include <cstddef>
+
+template <typename T>
+class QList : public std::vector<T> {
+public:
+  using std::vector<T>::vector;
+  bool isEmpty() const { return this->empty(); }
+  int count() const { return static_cast<int>(this->size()); }
+  const T &last() const { return this->back(); }
+  T &last() { return this->back(); }
+};
