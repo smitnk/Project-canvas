@@ -26,45 +26,10 @@ typedef double GLdouble;
 #define GLUT_STROKE_ROMAN ((void*)0)
 #endif
 
-// OpenToonz legacy OpenGL 1.x compatibility.
-// Do NOT redeclare functions already supplied by Android GLES2.
-
-#ifndef glVertex2d
-static inline void glVertex2d(GLdouble, GLdouble) {}
-#endif
-
-#ifndef glVertex2i
-static inline void glVertex2i(GLint, GLint) {}
-#endif
-
-#ifndef glColor4ub
-static inline void glColor4ub(GLubyte, GLubyte, GLubyte, GLubyte) {}
-#endif
-
-#ifndef glColor4d
-static inline void glColor4d(GLdouble, GLdouble, GLdouble, GLdouble) {}
-#endif
-
-#ifndef glMultMatrixd
-static inline void glMultMatrixd(const GLdouble*) {}
-#endif
-
-#ifndef glBegin
-static inline void glBegin(GLenum) {}
-#endif
-
-#ifndef glEnd
-static inline void glEnd() {}
-#endif
-
-#ifndef glPointSize
-static inline void glPointSize(GLfloat) {}
-#endif
-
-#ifndef glPushMatrix
-static inline void glPushMatrix() {}
-#endif
-
-#ifndef glPopMatrix
-static inline void glPopMatrix() {}
-#endif
+/*
+ * Android OpenGL ES declarations only.
+ *
+ * No fake/no-op OpenToonz or OpenGL implementations belong here.
+ * Legacy OpenToonz GL/GLU/GLUT functionality must be recovered from
+ * upstream or explicitly ported to Android rather than silently disabled.
+ */
