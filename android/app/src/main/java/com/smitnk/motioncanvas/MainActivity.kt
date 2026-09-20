@@ -3595,5 +3595,3 @@ private fun AudioToolsDialog(project: Project,currentFrame:Int,isRecording:Boole
         }
     })
 }
-
-}
