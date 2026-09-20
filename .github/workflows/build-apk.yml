@@ -28,6 +28,7 @@ jobs:
           git -C app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
           git clone --depth 1 --branch v3.8.0 https://github.com/freeglut/freeglut.git app/src/main/cpp/freeglut
           git -C app/src/main/cpp/freeglut checkout 3db1649ce1f5e42f1338b51e3fa14849be547d5d
+          python3 -c 'from pathlib import Path; p=Path("app/src/main/cpp/freeglut/include/GL/freeglut_std.h"); s=p.read_text(); s=s.replace("#   include <GLES2/gl2.h>", "#   include <GL/gl.h>"); p.write_text(s)'
           python3 <<'PY'
           from pathlib import Path
           p = Path("app/src/main/cpp/freeglut/CMakeLists.txt")
