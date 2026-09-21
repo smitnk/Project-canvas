@@ -155,22 +155,12 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrush.cpp
     opentoonz/toonz/sources/common/tgl/tgl.cpp
     opentoonz/toonz/sources/common/tsystem/tbigmemorymanager.cpp
-    opentoonz/toonz/sources/common/trop/trop.cpp
-    opentoonz/toonz/sources/common/trop/tresample.cpp
-    opentoonz/toonz/sources/common/trop/quickput.cpp
-    opentoonz/toonz/sources/common/trop/tover.cpp
     opentoonz/toonz/sources/common/tvrender/tpaletteutil.cpp
     opentoonz/toonz/sources/common/tvectorimage/drawutil.cpp
-    opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
     opentoonz/toonz/sources/common/trop/tropcm.cpp
     opentoonz/toonz/sources/common/trop/toperators.cpp
     opentoonz/toonz/sources/common/trop/tcheckboard.cpp
     opentoonz/toonz/sources/common/tcolor/tpixelutils.cpp
-    opentoonz/toonz/sources/common/trasterimage/trasterimage.cpp
-    opentoonz/toonz/sources/common/ttoonzimage/ttonzimage.cpp
-    opentoonz/toonz/sources/common/tcache/timagecache.cpp
-    opentoonz/toonz/sources/common/timage_io/timage_io.cpp
-    opentoonz/toonz/sources/common/timage_io/tlevel_io_android.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath_io.cpp
     opentoonz/toonz/sources/common/tsystem/tsystempd.cpp
     opentoonz/toonz/sources/common/tsystem/tsystem_android.cpp
@@ -185,7 +175,6 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
 
     # Missing but required implementations in the OpenToonz v1.8.0 dependency chain
     opentoonz/toonz/sources/common/timage/timage.cpp
-    opentoonz/toonz/sources/common/timage/tlevel.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
     opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
     opentoonz/toonz/sources/common/tvrender/tpalette.cpp
@@ -194,6 +183,7 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
 
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeprop.cpp
+    opentoonz/toonz/sources/common/tproperty.cpp
     opentoonz/toonz/sources/common/tgl/tstencilcontrol.cpp
 
     # ------------------------------------------------------
