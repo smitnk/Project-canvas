@@ -66,8 +66,6 @@ TFilePath getTestDir(std::string name) {
   return getTempDir() + TFilePath(name);
 }
 
-int getProcessId() { return static_cast<int>(getpid()); }
-
 void mkDir(const TFilePath &path) {
   std::error_code ec;
   std::filesystem::create_directories(std::filesystem::path(nativePath(path)), ec);
@@ -84,12 +82,6 @@ void rmDirTree(const TFilePath &path) {
   std::error_code ec;
   std::filesystem::remove_all(std::filesystem::path(nativePath(path)), ec);
   if (ec) throw TSystemException(path, ec.message());
-}
-
-void touchFile(const TFilePath &path) {
-  const std::string p = nativePath(path);
-  std::ofstream f(p, std::ios::app);
-  if (!f) throw TSystemException(path, std::strerror(errno));
 }
 
 void deleteFile(const TFilePath &path) {
@@ -171,4 +163,3 @@ TSystemException::TSystemException(const std::string &msg)
 TSystemException::TSystemException(const std::wstring &msg)
     : TException(msg), m_err(0), m_msg(msg) {}
 
-TString TSystemException::getMessage() const { return m_msg; }
