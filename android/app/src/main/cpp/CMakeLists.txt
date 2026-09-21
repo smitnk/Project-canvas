@@ -33,6 +33,34 @@ include_directories(
 # bring the OpenToonz desktop application or desktop UI into the engine.
 # ==========================================================
 if(ANDROID)
+    set(MESA_GLU_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glu)
+    file(GLOB_RECURSE MESA_GLU_SOURCES CONFIGURE_DEPENDS
+        ${MESA_GLU_SOURCE_DIR}/src/*.c
+        ${MESA_GLU_SOURCE_DIR}/src/*.cc
+    )
+    set(MESA_GLU_PRIORITYQ_HEAP
+        ${MESA_GLU_SOURCE_DIR}/src/libtess/priorityq-heap.c
+    )
+    list(REMOVE_ITEM MESA_GLU_SOURCES ${MESA_GLU_PRIORITYQ_HEAP})
+    add_library(mesa_glu STATIC ${MESA_GLU_SOURCES})
+    target_include_directories(mesa_glu PUBLIC
+        ${MESA_GLU_SOURCE_DIR}/include
+        ${MESA_GLU_SOURCE_DIR}/src/include
+        ${MESA_GLU_SOURCE_DIR}/src/libnurbs/interface
+        ${MESA_GLU_SOURCE_DIR}/src/libnurbs/internals
+        ${MESA_GLU_SOURCE_DIR}/src/libnurbs/nurbtess
+        ${MESA_GLU_SOURCE_DIR}/src/libtess
+        ${MESA_GLU_SOURCE_DIR}/src/libutil
+        ${CMAKE_CURRENT_SOURCE_DIR}/gl4es/include
+    )
+    target_compile_definitions(mesa_glu PRIVATE LIBRARYBUILD _GNU_SOURCE NDEBUG)
+    target_compile_options(mesa_glu PRIVATE
+        "SHELL:-include assert.h"
+        "SHELL:-include limits.h"
+    )
+    target_link_libraries(mesa_glu PUBLIC GL)
+
+if(ANDROID)
     set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
     set(STATICLIB ON CACHE BOOL "" FORCE)
     set(NOX11 ON CACHE BOOL "" FORCE)
@@ -51,6 +79,7 @@ set(OPENTOONZ_DRAWING_SOURCES
     # Existing ProjectCanvas adapter and platform support
     OpenToonzEngineCore.cpp
     OpenToonzNativeBridge.cpp
+    OpenToonzRuntimeSupport.cpp
 
     # Actual OpenToonz stroke generation
     opentoonz/toonz/sources/toonzlib/strokegenerator.cpp
@@ -70,8 +99,6 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
-    opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
-    opentoonz/toonz/sources/common/tgl/tgl.cpp
 
     # Vector image/style sources already present in v29
 
@@ -98,6 +125,7 @@ if(ANDROID)
         ${gles2-lib}
         ${egl-lib}
         GL
+        mesa_glu
     )
 endif()
 
