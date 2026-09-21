@@ -1891,13 +1891,21 @@ fun EditorScreen(
                                     currentDrawingPoints.clear()
                                     currentOpenToonzPreview = null
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        OpenToonzDrawingEngine.beginStroke(start = canvasPoint, pressure = pressure, baseSize = size, color = if (tool == ToolType.Eraser) project.backgroundColor else color, opacity = color.alpha, isVector = tool != ToolType.Eraser)
-                                    }
                                 } else {
                                     currentDrawingPoints.clear()
                                     currentOpenToonzPreview = null
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
+                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
+                                        OpenToonzDrawingEngine.isNativeAvailable()) {
+                                        OpenToonzDrawingEngine.beginStroke(
+                                            start = canvasPoint,
+                                            pressure = pressure,
+                                            baseSize = size,
+                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
+                                            opacity = color.alpha,
+                                            isVector = tool != ToolType.Eraser
+                                        )
+                                    }
                                 }
                             },
                             onDraw = { canvasPoint, pressure ->
