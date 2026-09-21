@@ -2613,7 +2613,6 @@ fun EditorScreen(
         )
     }
 }
-}
 
 @Composable
 fun OnionSkinSettingsDialog(
