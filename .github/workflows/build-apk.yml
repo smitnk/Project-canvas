@@ -2,7 +2,7 @@ name: Project Canvas Android Build
 
 on:
   push:
-    branches: [main, fix/tgl-extra-namespace-v2]
+    branches: [main, fix/tgl-extra-namespace-v2, feature/brush-library-color-wheel]
   pull_request:
     branches: [main]
   workflow_dispatch:
