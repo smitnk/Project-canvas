@@ -33,6 +33,7 @@
 #include <QDir>
 #include <QObject>
 #include <QStringList>
+#include <QList>
 
 DVAPI std::ostream &operator<<(std::ostream &out, const QDateTime &t);
 
