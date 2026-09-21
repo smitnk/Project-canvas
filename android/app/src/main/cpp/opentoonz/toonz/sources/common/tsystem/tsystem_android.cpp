@@ -9,6 +9,7 @@
 #include <fstream>
 #include <list>
 #include <sys/stat.h>
+#include <thread>
 #include <unistd.h>
 
 namespace TSystem {
@@ -106,15 +107,14 @@ void renameFile(const TFilePath &dst, const TFilePath &src, bool overwrite) {
   if (ec) throw TSystemException(dst, ec.message());
 }
 
-bool copyFile(const TFilePath &dst, const TFilePath &src, bool overwrite) {
+void copyFile(const TFilePath &dst, const TFilePath &src, bool overwrite) {
   std::error_code ec;
   auto opts = overwrite ? std::filesystem::copy_options::overwrite_existing
                         : std::filesystem::copy_options::none;
   if (!std::filesystem::copy_file(std::filesystem::path(nativePath(src)),
                                   std::filesystem::path(nativePath(dst)),
                                   opts, ec))
-    return false;
-  return true;
+    throw TSystemException(dst, ec.message());
 }
 
 bool removeFileOrLevel(const TFilePath &fp) {
@@ -123,7 +123,8 @@ bool removeFileOrLevel(const TFilePath &fp) {
 }
 
 bool copyFileOrLevel(const TFilePath &dst, const TFilePath &src) {
-  return copyFile(dst, src, true);
+  copyFile(dst, src, true);
+  return true;
 }
 
 bool renameFileOrLevel(const TFilePath &dst, const TFilePath &src, bool overwrite) {
