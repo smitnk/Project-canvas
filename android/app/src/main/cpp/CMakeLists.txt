@@ -172,9 +172,11 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     # ------------------------------------------------------
     opentoonz/toonz/sources/common/tvectorimage/tvectorimage.cpp
     opentoonz/toonz/sources/common/tvectorimage/tcomputeregions.cpp
+    opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
 
     # Missing but required implementations in the OpenToonz v1.8.0 dependency chain
     opentoonz/toonz/sources/common/timage/timage.cpp
+    opentoonz/toonz/sources/common/timage/tlevel.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
     opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
     opentoonz/toonz/sources/common/tvrender/tpalette.cpp
