@@ -128,6 +128,17 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tcolor/tpixel.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrush.cpp
     opentoonz/toonz/sources/common/tgl/tgl.cpp
+    opentoonz/toonz/sources/common/tsystem/tbigmemorymanager.cpp
+    opentoonz/toonz/sources/image/tiio.cpp
+    opentoonz/toonz/sources/common/trop/trop.cpp
+    opentoonz/toonz/sources/common/trop/tresample.cpp
+    opentoonz/toonz/sources/common/trop/quickput.cpp
+    opentoonz/toonz/sources/common/trop/tover.cpp
+    opentoonz/toonz/sources/common/tvrender/tpaletteutil.cpp
+    opentoonz/toonz/sources/common/tvectorimage/drawutil.cpp
+    opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
+    opentoonz/toonz/sources/common/tsystem/tfiletype.cpp
+    opentoonz/toonz/sources/common/tstream/tstream.cpp
 
     # ------------------------------------------------------
     # Vector image/style sources already present in v29
