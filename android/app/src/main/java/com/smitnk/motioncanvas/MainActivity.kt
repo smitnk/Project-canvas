@@ -1408,15 +1408,21 @@ fun EditorScreen(
                     }
                 },
                 actions = {
-                    // Zoom In, Zoom Out, and Reset Controls
-                    IconButton(onClick = { zoomPanState.zoomOut() }) {
-                        Icon(Icons.Default.ZoomOut, contentDescription = "Zoom Out", tint = White)
-                    }
-                    TextButton(onClick = { zoomPanState.reset() }) {
-                        Text("${zoomPanState.zoomPercent}%", color = if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) PinkAccent else White, fontSize = 12.sp)
-                    }
-                    IconButton(onClick = { zoomPanState.zoomIn() }) {
-                        Icon(Icons.Default.ZoomIn, contentDescription = "Zoom In", tint = White)
+                    // Compact, non-overlapping zoom controls.
+                    Row(
+                        modifier = Modifier.widthIn(min = 118.dp, max = 128.dp),
+                        horizontalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { zoomPanState.zoomOut() }, modifier = Modifier.size(38.dp)) {
+                            Icon(Icons.Default.ZoomOut, contentDescription = "Zoom Out", tint = White)
+                        }
+                        TextButton(onClick = { zoomPanState.reset() }, modifier = Modifier.width(42.dp).height(40.dp), contentPadding = PaddingValues(0.dp)) {
+                            Text("${zoomPanState.zoomPercent}%", color = if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) PinkAccent else White, fontSize = 12.sp, maxLines = 1)
+                        }
+                        IconButton(onClick = { zoomPanState.zoomIn() }, modifier = Modifier.size(38.dp)) {
+                            Icon(Icons.Default.ZoomIn, contentDescription = "Zoom In", tint = White)
+                        }
                     }
                     if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) {
                         IconButton(onClick = { zoomPanState.reset() }) {
@@ -1498,6 +1504,14 @@ fun EditorScreen(
                         Icon(Icons.Default.AutoAwesome, contentDescription = "Pro tools", tint = PinkAccent)
                     }
                     }
+                    }
+
+                    // Always-visible brush library and color-wheel entry points.
+                    IconButton(onClick = { showBrushPresets = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Brush, contentDescription = "Professional Brush Library", tint = PinkAccent)
+                    }
+                    IconButton(onClick = { showColorPicker = true }, modifier = Modifier.size(44.dp)) {
+                        Box(Modifier.size(28.dp).clip(CircleShape).background(color).border(2.dp, White, CircleShape))
                     }
 
                     IconButton(onClick = onOpenMore) {
@@ -2019,13 +2033,29 @@ fun EditorScreen(
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val canvasSize = drawContext.size
-                    val artboardOrigin = artboardViewport.origin(
-                        zoomPanState.zoom, zoomPanState.pan
+                    val canvasViewport = ArtboardViewport(
+                        workspaceWidth = canvasSize.width,
+                        workspaceHeight = canvasSize.height,
+                        canvasWidth = project.canvasW.toFloat(),
+                        canvasHeight = project.canvasH.toFloat()
                     )
-                    val artboardScale = artboardViewport.effectiveScale(zoomPanState.zoom)
+                    val artboardOrigin = canvasViewport.origin(zoomPanState.zoom, zoomPanState.pan)
+                    val artboardScale = canvasViewport.effectiveScale(zoomPanState.zoom)
 
                     // Explicit centered project artboard. Everything inside uses project coordinates.
                     translate(left = artboardOrigin.x, top = artboardOrigin.y) {
+                        // Always draw the visible drawing surface before any compositor output.
+                        drawRect(
+                            color = project.backgroundColor,
+                            topLeft = Offset.Zero,
+                            size = androidx.compose.ui.geometry.Size(project.canvasW.toFloat(), project.canvasH.toFloat())
+                        )
+                        drawRect(
+                            color = PinkAccent.copy(alpha = 0.65f),
+                            topLeft = Offset.Zero,
+                            size = androidx.compose.ui.geometry.Size(project.canvasW.toFloat(), project.canvasH.toFloat()),
+                            style = Stroke(width = 2f / artboardScale.coerceAtLeast(0.01f))
+                        )
                         scale(scale = artboardScale, pivot = Offset.Zero) {
                             drawRect(
                                 color = project.backgroundColor,
