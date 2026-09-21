@@ -27,25 +27,25 @@ jobs:
           test -f app/src/main/cpp/CMakeLists.txt
           echo "Android project detected"
 
-      - name: Fetch real OpenGL compatibility sources
+      - name: Fetch native compatibility dependencies
         working-directory: android
         shell: bash
         run: |
           set -euxo pipefail
+
           git clone --depth 1 https://github.com/ptitSeb/gl4es.git app/src/main/cpp/gl4es
           git -C app/src/main/cpp/gl4es fetch --depth 1 origin 81547d986798e876de8b434193920b606a72363f
           git -C app/src/main/cpp/gl4es checkout 81547d986798e876de8b434193920b606a72363f
           grep -q 'if(ANDROID)' app/src/main/cpp/gl4es/CMakeLists.txt
-          curl -L --fail https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz -o /tmp/glu-9.0.3.tar.xz
-          tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
-          mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
-          test -d app/src/main/cpp/glu/src
+
           curl -L --fail https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz -o /tmp/glu-9.0.3.tar.xz
           tar -xJf /tmp/glu-9.0.3.tar.xz -C app/src/main/cpp
           mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
           test -d app/src/main/cpp/glu/src
 
-
+          git clone --depth 1 --branch v1.9.4 https://github.com/lz4/lz4.git app/src/main/cpp/lz4
+          test -f app/src/main/cpp/lz4/lib/lz4frame.h
+          test -f app/src/main/cpp/lz4/build/cmake/CMakeLists.txt
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
