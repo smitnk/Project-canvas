@@ -136,6 +136,9 @@ opentoonz/toonz/sources/common/tvrender/tregionprop.cpp
 opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
     opentoonz/toonz/sources/common/tvrender/tellipticbrush.cpp
+    opentoonz/toonz/sources/common/tvrender/tglregions.cpp
+    opentoonz/toonz/sources/common/tvrender/tglcurves.cpp
+    opentoonz/toonz/sources/common/tvrender/ttessellator.cpp
 
     # ------------------------------------------------------
     # Actual OpenToonz core dependencies
@@ -161,11 +164,13 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
     opentoonz/toonz/sources/common/trop/tropcm.cpp
     opentoonz/toonz/sources/common/trop/toperators.cpp
+    opentoonz/toonz/sources/common/trop/tcheckboard.cpp
     opentoonz/toonz/sources/common/tcolor/tpixelutils.cpp
     opentoonz/toonz/sources/common/trasterimage/trasterimage.cpp
     opentoonz/toonz/sources/common/ttoonzimage/ttonzimage.cpp
     opentoonz/toonz/sources/common/tcache/timagecache.cpp
     opentoonz/toonz/sources/common/timage_io/timage_io.cpp
+    opentoonz/toonz/sources/common/timage_io/tlevel_io.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath_io.cpp
     opentoonz/toonz/sources/common/tsystem/tsystempd.cpp
     opentoonz/toonz/sources/common/tsystem/tsystem_android.cpp
