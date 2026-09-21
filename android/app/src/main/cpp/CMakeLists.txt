@@ -39,6 +39,7 @@ add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
 # LZ4 provides the real LZ4 frame API used by OpenToonz tstream.
 # Build the core library sources directly with the Android NDK. This keeps
 # the headless engine independent of LZ4's optional CMake targets/tools.
+set(BOOST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/boost)
 set(LZ4_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lz4/lib)
 
 add_library(lz4_static STATIC
@@ -222,6 +223,7 @@ target_include_directories(
     opentoonz_drawing_engine PRIVATE
     ${LZ4_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
+    ${BOOST_ROOT_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/traster
