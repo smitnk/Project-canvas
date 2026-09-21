@@ -19,7 +19,9 @@
 #include <math.h>
 
 // Common includes
+#if !defined(__ANDROID__)
 #include "./quantel/tiio_quantel.h"
+#endif
 #include "./sgi/tiio_sgi.h"
 #include "./tga/tiio_tga.h"
 #include "./png/tiio_png.h"
