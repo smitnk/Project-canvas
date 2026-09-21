@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.sp
 import com.smitnk.motioncanvas.ui.theme.*
 import com.smitnk.motioncanvas.brush.CustomBrushPreset
