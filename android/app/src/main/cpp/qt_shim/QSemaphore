@@ -1,0 +1,53 @@
+#pragma once
+#include <condition_variable>
+#include <mutex>
+
+class QSemaphore {
+public:
+  explicit QSemaphore(int n = 0) : m_count(n < 0 ? 0 : n) {}
+
+  void acquire(int n = 1) {
+    if (n <= 0) return;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_condition.wait(lock, [this, n]() { return m_count >= n; });
+    m_count -= n;
+  }
+
+  bool tryAcquire(int n = 1) {
+    if (n <= 0) return true;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_count < n) return false;
+    m_count -= n;
+    return true;
+  }
+
+  bool tryAcquire(int n, int timeout) {
+    if (n <= 0) return true;
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!m_condition.wait_for(lock, std::chrono::milliseconds(timeout),
+                             [this, n]() { return m_count >= n; })) {
+      return false;
+    }
+    m_count -= n;
+    return true;
+  }
+
+  void release(int n = 1) {
+    if (n <= 0) return;
+    {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_count += n;
+    }
+    m_condition.notify_all();
+  }
+
+  int available() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_count;
+  }
+
+private:
+  mutable std::mutex m_mutex;
+  std::condition_variable m_condition;
+  int m_count;
+};
