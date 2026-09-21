@@ -13,6 +13,8 @@
 #include "tthreadmessage.h"
 #include "tstrokeprop.h"
 
+#include <chrono>
+
 #include "tconvert.h"
 #include "tcurves.h"
 #include "tstrokeoutline.h"
@@ -181,7 +183,7 @@ static void drawFirstControlPoint(const TVectorRenderData &rd,
                                   TStroke *stroke) {
   TPointD p          = stroke->getPoint(0.0);
   double length      = stroke->getLength(0.0, 1.0);
-  int msecs          = QTime::currentTime().msec();
+  int msecs = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000);
   double modifier    = (msecs / 100) * 0.1;
   TPointD startPoint = stroke->getPointAtLength(length * modifier);
   TPointD endPoint   = stroke->getPointAtLength(length * 0.10);
