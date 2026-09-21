@@ -46,6 +46,10 @@
 // #include "lmcons.h"
 #endif
 
+#if defined(__ANDROID__) && !defined(LINUX)
+#define LINUX 1
+#endif
+
 #ifdef LINUX
 #define PLATFORM LINUX
 #include <grp.h>
@@ -54,6 +58,13 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <dirent.h>
+#ifdef __ANDROID__
+#include <sys/sysinfo.h>
+#include <sys/vfs.h>
+#include <pwd.h>
+#include <dlfcn.h>
+#include <sys/time.h>
+#else
 #include <sys/dir.h>
 #include <sys/sysinfo.h>
 #include <sys/swap.h>
@@ -62,6 +73,7 @@
 #include <mntent.h>
 #include <dlfcn.h>
 #include <sys/time.h>
+#endif
 
 // Qt headers for Linux
 #include <QDir>
@@ -568,6 +580,9 @@ void TSystem::moveFileToRecycleBin(const TFilePath &fp) {
     } catch (...) {
     }
   }
+#elif defined(__ANDROID__)
+  // Android has no desktop recycle-bin integration in this native engine.
+  deleteFile(fp);
 #elif defined(LINUX)
   //
   // From https://stackoverflow.com/questions/17964439/move-files-to-trash-recycle-bin-in-qt
