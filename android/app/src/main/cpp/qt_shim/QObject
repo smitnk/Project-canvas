@@ -19,7 +19,7 @@ public:
 #endif
 
 #ifndef Q_SLOTS
-#define Q_SLOTS public
+#define Q_SLOTS
 #endif
 
 inline void qWarning(const char *format, ...) {
