@@ -99,6 +99,8 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
+    opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
+    opentoonz/toonz/sources/common/tsystem/tfiletype.cpp
 
     # Vector image/style sources already present in v29
 
