@@ -15,6 +15,11 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+// Android shim for qDebug() used by the OpenToonz system layer.
+#ifdef __ANDROID__
+#include "QDebug"
+#endif
+
 // Project-specific headers
 #include "tsystem.h"
 //#include "tunicode.h"  // Uncomment if needed
