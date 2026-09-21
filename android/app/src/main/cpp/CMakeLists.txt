@@ -33,6 +33,10 @@ include_directories(
 # ==========================================================
 if(ANDROID)
     set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
+    set(STATICLIB ON CACHE BOOL "" FORCE)
+    set(NOX11 ON CACHE BOOL "" FORCE)
+    set(NO_GBM ON CACHE BOOL "" FORCE)
+    set(DEFAULT_ES 2 CACHE STRING "" FORCE)
     add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
     include_directories(${GL4ES_SOURCE_DIR}/include)
 endif()
