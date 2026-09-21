@@ -122,9 +122,9 @@ fun ProfessionalColorWheelDialog(
 ) {
     var selectedArgb by remember(currentColor) { mutableIntStateOf(currentColor.toArgb()) }
     var value by remember(currentColor) {
-        FloatArray(3).also {
+        mutableFloatStateOf(FloatArray(3).also {
             android.graphics.Color.colorToHSV(currentColor.toArgb(), it)
-        }[2]
+        }[2])
     }
     var alpha by remember(currentColor) { mutableFloatStateOf(currentColor.alpha) }
 
