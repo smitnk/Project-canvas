@@ -24,6 +24,20 @@ include_directories(
 )
 
 # ==========================================================
+# Android OpenGL compatibility required by the real OpenToonz StrokeGenerator.
+# StrokeGenerator contains legacy drawFragments()/drawFilledStroke() methods
+# that reference OpenGL symbols even though Project Canvas renders extracted
+# TStroke geometry on the Android side.
+# GL4ES provides those legacy symbols through GLES2 on Android; it does not
+# bring the OpenToonz desktop application or desktop UI into the engine.
+# ==========================================================
+if(ANDROID)
+    set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
+    add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
+    include_directories(${GL4ES_SOURCE_DIR}/include)
+endif()
+
+# ==========================================================
 # REAL OPENTOONZ LOW-LEVEL DRAWING SOURCES
 # ==========================================================
 
@@ -68,10 +82,16 @@ if(ANDROID)
     find_library(log-lib log)
     find_library(jnigraphics-lib jnigraphics)
 
+    find_library(gles2-lib GLESv2)
+    find_library(egl-lib EGL)
+
     target_link_libraries(
         opentoonz_drawing_engine
         ${log-lib}
         ${jnigraphics-lib}
+        ${gles2-lib}
+        ${egl-lib}
+        GL
     )
 endif()
 
