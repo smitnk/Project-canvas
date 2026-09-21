@@ -2,8 +2,10 @@ name: Project Canvas Android Build
 
 on:
   push:
-    branches: [main, fix/tgl-extra-namespace-v2
-      - android-linker-strategy-a]
+    branches:
+      - main
+      - fix/tgl-extra-namespace-v2
+      - android-linker-strategy-a
   workflow_dispatch:
 
 permissions:
