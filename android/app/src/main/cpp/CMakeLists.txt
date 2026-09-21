@@ -198,6 +198,19 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/toonzlib/rasterstrokegenerator.cpp
 )
 
+# Strategy B: compile the remaining low-level OpenToonz implementation units
+file(GLOB_RECURSE OT_EXTRA_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/timage/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/timage_io/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/trop/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tvrender/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tsystem/*.cpp
+)
+list(REMOVE_ITEM OT_EXTRA_SOURCES ${OPENTOONZ_DRAWING_SOURCES})
+list(REMOVE_ITEM OT_EXTRA_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgl/tstencilcontrol.cpp)
+list(APPEND OPENTOONZ_DRAWING_SOURCES ${OT_EXTRA_SOURCES})
 add_library(
     opentoonz_drawing_engine
     SHARED
