@@ -797,8 +797,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-        ) {
-            TabRow(
+        ) {            TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = AppBackground,
                 contentColor = PinkAccent
@@ -1597,8 +1596,7 @@ fun EditorScreen(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-        ) {
+                .padding(padding)        ) {
             // Left Toolbar
             if (workspaceVisibility.leftToolbar) Column(
                 modifier = Modifier
@@ -1891,6 +1889,17 @@ fun EditorScreen(
                                     currentDrawingPoints.clear()
                                     currentOpenToonzPreview = null
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
+                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
+                                        OpenToonzDrawingEngine.isNativeAvailable()) {
+                                        OpenToonzDrawingEngine.beginStroke(
+                                            start = canvasPoint,
+                                            pressure = pressure,
+                                            baseSize = size,
+                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
+                                            opacity = color.alpha,
+                                            isVector = tool != ToolType.Eraser
+                                        )
+                                    }
                                 } else {
                                     currentDrawingPoints.clear()
                                     currentOpenToonzPreview = null
@@ -1982,14 +1991,9 @@ fun EditorScreen(
                                     }
                                 } else if (tool != ToolType.Eyedropper) {
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && currentDrawingPoints.size >= 4 && OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        currentOpenToonzPreview = OpenToonzDrawingEngine.generateStroke(
-                                            points = currentDrawingPoints.toList(),
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
+                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
+                                        OpenToonzDrawingEngine.isNativeAvailable()) {
+                                        OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
                                     }
                                 }
                             },
@@ -2059,14 +2063,21 @@ fun EditorScreen(
                                     if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
                                         committedPoints.size >= 4 &&
                                         OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        val generated = OpenToonzDrawingEngine.generateStroke(
-                                            points = committedPoints,
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
-                                        OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                        runCatching {
+                                            OpenToonzDrawingEngine.endStroke(
+                                                points = committedPoints.map {
+                                                    OpenToonzDrawingEngine.StrokePoint(
+                                                        Offset(it.x, it.y),
+                                                        it.pressure
+                                                    )
+                                                },
+                                                baseSize = size
+                                            )
+                                        }.onSuccess { generated ->
+                                            if (generated.segments.isNotEmpty()) {
+                                                OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                            }
+                                        }
                                     }
                                     history.addStroke(committedStroke)
                                     currentDrawingPoints.clear()
@@ -2315,13 +2326,26 @@ fun EditorScreen(
                                 }
                             }
 
-                            // Active dragging stroke preview
+                            // Active dragging stroke preview.
+                            // OpenToonz remains authoritative for the committed stroke; this
+                            // temporary path only keeps the touch feedback visible while the
+                            // native StrokeGenerator is still receiving MOVE points.
                             if (currentDrawingPoints.size > 1) {
-                                val path = currentOpenToonzPreview?.let { OpenToonzDrawingEngine.toComposePath(it) } ?: Path()
+                                val path = currentOpenToonzPreview?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                    ?: Path().apply {
+                                        moveTo(currentDrawingPoints.first().x, currentDrawingPoints.first().y)
+                                        currentDrawingPoints.drop(1).forEach { p ->
+                                            lineTo(p.x, p.y)
+                                        }
+                                    }
                                 drawPath(
                                     path = path,
                                     color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                    style = Stroke(width = pressureAdjustedWidth(size, currentDrawingPoints), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                    style = Stroke(
+                                        width = pressureAdjustedWidth(size, currentDrawingPoints),
+                                        cap = StrokeCap.Round,
+                                        join = StrokeJoin.Round
+                                    )
                                 )
                             }
 
@@ -2397,8 +2421,7 @@ fun EditorScreen(
                                     val cloned = stroke.deepCopy()
                                     val movedPoints = cloned.points.map { p -> DrawPoint(p.x + offset.x, p.y + offset.y) }
                                     cloned.copy(points = movedPoints)
-                                }
-                                history.addStrokes(pasted)
+                                }                                history.addStrokes(pasted)
                                 selectedStrokeIds.clear()
                                 selectedStrokeIds.addAll(pasted.map { it.id })
                             }
@@ -3197,8 +3220,7 @@ fun TimelineScreen(
                                         )
                                     }
 
-                                    Box {
-                                        TextButton(
+                                    Box {                                        TextButton(
                                             onClick = { showFpsMenu = true },
                                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
