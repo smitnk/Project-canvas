@@ -410,15 +410,8 @@ fun MotionCanvasApp() {
         }
     }
 
-    // Shared audio/video clock: audio is prepared from the same frame timeline used by playback.
-    LaunchedEffect(activeProject) {
-        activeProject?.let { project ->
-            AudioTrackBridge.ensureTracks(project.audioTracks, project.audioClips)
-            sharedAudioClock.prepare(project.audioTracks, project.fps)
-            sharedAudioClock.bindClips(project.audioTracks)
-        }
-    }
-
+    // Audio is initialized lazily by playback. Opening an animation must never
+    // construct MediaPlayer instances on the editor-entry path.
     LaunchedEffect(isPlaying, activeProject, activeProject?.fps, timelineLoopMode) {
         val project = activeProject ?: return@LaunchedEffect
         if (!isPlaying || project.frames.isEmpty()) return@LaunchedEffect
