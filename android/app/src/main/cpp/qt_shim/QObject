@@ -5,9 +5,22 @@
 
 class QObject {
 public:
+  explicit QObject(QObject* parent = nullptr) { (void)parent; }
   virtual ~QObject() = default;
   static QString tr(const char *text) { return QString(text); }
 };
+
+#ifndef Q_OBJECT
+#define Q_OBJECT
+#endif
+
+#ifndef Q_SIGNALS
+#define Q_SIGNALS public
+#endif
+
+#ifndef Q_SLOTS
+#define Q_SLOTS public
+#endif
 
 inline void qWarning(const char *format, ...) {
   va_list args;
