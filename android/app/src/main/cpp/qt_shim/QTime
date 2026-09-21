@@ -1,0 +1,14 @@
+#pragma once
+#include <chrono>
+class QTime {
+  int m_msec = 0;
+public:
+  QTime() = default;
+  explicit QTime(int msec) : m_msec(msec) {}
+  static QTime currentTime() {
+    using namespace std::chrono;
+    auto now = system_clock::now().time_since_epoch();
+    return QTime((int)(duration_cast<milliseconds>(now).count() % 60000));
+  }
+  int msec() const { return m_msec % 1000; }
+};
