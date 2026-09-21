@@ -18,7 +18,6 @@
 #include "tconvert.h"
 #include "tcurves.h"
 #include "tstrokeoutline.h"
-#include <QTime>
 
 #ifndef _WIN32
 #define CALLBACK
