@@ -567,8 +567,16 @@ fun MotionCanvasApp() {
                 CreateProjectScreen(
                     onBack = { screen = ScreenType.HOME },
                     onCreate = { name, fps, w, h, bg ->
+                        val requestedName = name.trim().ifEmpty { "Untitled" }
+                        var uniqueName = requestedName
+                        var suffix = 2
+                        while (projects.any { it.name.equals(uniqueName, ignoreCase = true) }) {
+                            uniqueName = "$requestedName $suffix"
+                            suffix++
+                        }
+
                         val newProj = Project(
-                            name = name.ifEmpty { "Untitled" },
+                            name = uniqueName,
                             fps = fps,
                             canvasW = w,
                             canvasH = h,
