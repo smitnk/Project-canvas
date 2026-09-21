@@ -4,4 +4,5 @@ class QChar {
 public:
   QChar(char c = 0) : m_c(c) {}
   operator char() const { return m_c; }
+  bool isNull() const { return m_c == 0; }
 };
