@@ -144,6 +144,10 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
+    opentoonz/toonz/sources/common/tvrender/ttessellator.cpp
+    opentoonz/toonz/sources/common/trop/tcheckboard.cpp
+    opentoonz/toonz/sources/common/timage_io/tlevel_io.cpp
+    opentoonz/toonz/sources/common/tvrender/tglregions.cpp
     opentoonz/toonz/sources/common/tcore/tstopwatch.cpp
 
     # Recovered OpenToonz v1.8.0 implementations required by the drawing dependency chain
