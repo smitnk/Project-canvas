@@ -4,10 +4,15 @@
 class QMutex {
 public:
   enum RecursionMode { NonRecursive, Recursive };
+
   explicit QMutex(RecursionMode = NonRecursive) {}
+
   void lock() { m_mutex.lock(); }
   void unlock() { m_mutex.unlock(); }
   bool tryLock() { return m_mutex.try_lock(); }
+
+  std::recursive_mutex& stdMutex() { return m_mutex; }
+
 private:
   std::recursive_mutex m_mutex;
 };
