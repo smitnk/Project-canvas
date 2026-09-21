@@ -1132,7 +1132,7 @@ TFilePath::TFilePathInfo TFilePath::analyzePath() const {
   if (match.hasMatch()) {
     info.levelName = match.captured(1);
     info.sepChar =
-        match.captured(2).isEmpty() ? QChar() : match.captured(2).at(0);
+        match.captured(2).isEmpty() ? QChar() : QChar(match.captured(2).at(0));
     info.extension = match.captured(5);
 
     // ignore frame numbers on non-sequential (i.e. movie) extension case
