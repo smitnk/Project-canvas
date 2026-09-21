@@ -59,22 +59,44 @@ object ProjectRepository {
         put("fills", JSONArray().apply { f.fills.forEach { put(JSONObject().apply { put("x", it.x); put("y", it.y); put("color", it.color.toArgb()); put("tolerance", it.tolerance) }) } })
         put("texts", JSONArray().apply { f.texts.forEach { put(JSONObject().apply { put("id", it.id); put("text", it.text); put("x", it.x); put("y", it.y); put("size", it.size); put("color", it.color.toArgb()) }) } })
     }
-    private fun layer(l: Layer) = JSONObject().apply { put("id", l.id); put("name", l.name); put("visible", l.visible); put("opacity", l.opacity) }
+    private fun layer(l: Layer) = JSONObject().apply {
+        put("id", l.id)
+        put("name", l.name)
+        put("visible", l.visible)
+        put("opacity", l.opacity)
+        put("clipToBelow", l.clipToBelow)
+        put("blendMode", l.blendMode)
+    }
     private fun stroke(s: DrawStroke) = JSONObject().apply {
-        put("id", s.id); put("color", s.color.toArgb()); put("width", s.strokeWidth); put("alpha", s.alpha); put("eraser", s.isEraser)
+        put("id", s.id)
+        put("color", s.color.toArgb())
+        put("width", s.strokeWidth)
+        put("alpha", s.alpha)
+        put("eraser", s.isEraser)
+        put("layerIndex", s.layerIndex)
+        put("textured", s.textured)
         put("points", JSONArray().apply { s.points.forEach { put(JSONObject().apply { put("x", it.x); put("y", it.y); put("pressure", it.pressure) }) } })
     }
 
     private fun decode(o: JSONObject): Project {
         val frames = mutableListOf<Frame>(); val fs = o.optJSONArray("frames") ?: JSONArray()
         for (i in 0 until fs.length()) { val f = fs.getJSONObject(i); val strokes = mutableListOf<DrawStroke>(); val ss = f.optJSONArray("strokes") ?: JSONArray()
-            for (j in 0 until ss.length()) { val s=ss.getJSONObject(j); val pts=mutableListOf<DrawPoint>(); val ps=s.optJSONArray("points") ?: JSONArray(); for(k in 0 until ps.length()){val q=ps.getJSONObject(k); pts.add(DrawPoint(q.getDouble("x").toFloat(),q.getDouble("y").toFloat(),q.optDouble("pressure",1.0).toFloat()))}; strokes.add(DrawStroke(s.getString("id"),pts,Color(s.optLong("color",Color.Black.toArgb().toLong()).toInt()),s.optDouble("width",8.0).toFloat(),s.optDouble("alpha",1.0).toFloat(),s.optBoolean("eraser",false))) }
+            for (j in 0 until ss.length()) { val s=ss.getJSONObject(j); val pts=mutableListOf<DrawPoint>(); val ps=s.optJSONArray("points") ?: JSONArray(); for(k in 0 until ps.length()){val q=ps.getJSONObject(k); pts.add(DrawPoint(q.getDouble("x").toFloat(),q.getDouble("y").toFloat(),q.optDouble("pressure",1.0).toFloat()))}; strokes.add(DrawStroke(s.getString("id"),pts,Color(s.optLong("color",Color.Black.toArgb().toLong()).toInt()),s.optDouble("width",8.0).toFloat(),s.optDouble("alpha",1.0).toFloat(),s.optBoolean("eraser",false),s.optInt("layerIndex",0),s.optBoolean("textured",false))) }
             val fills = mutableListOf<com.smitnk.motioncanvas.FillMark>(); val ff=f.optJSONArray("fills") ?: JSONArray(); for(k in 0 until ff.length()){ val q=ff.getJSONObject(k); fills.add(com.smitnk.motioncanvas.FillMark(q.optInt("x"),q.optInt("y"),Color(q.optInt("color",Color.Black.toArgb())),q.optInt("tolerance",12))) }
             val texts = mutableListOf<com.smitnk.motioncanvas.CanvasText>(); val tt=f.optJSONArray("texts") ?: JSONArray(); for(k in 0 until tt.length()){ val q=tt.getJSONObject(k); texts.add(com.smitnk.motioncanvas.CanvasText(q.optString("id"),q.optString("text"),q.optDouble("x").toFloat(),q.optDouble("y").toFloat(),q.optDouble("size",40.0).toFloat(),Color(q.optInt("color",Color.Black.toArgb())))) }
             frames.add(Frame(f.getString("id"),strokes,texts, mutableListOf(), fills, f.optInt("durationFrames",1), f.optBoolean("keyframe",false), f.optString("tag",""), Color(f.optInt("tagColor",Color.Transparent.toArgb()))))
         }
         if(frames.isEmpty()) frames.add(Frame())
-        val layers=mutableListOf<Layer>(); val ls=o.optJSONArray("layers") ?: JSONArray(); for(i in 0 until ls.length()){val l=ls.getJSONObject(i); layers.add(Layer(l.getString("id"),l.getString("name"),l.optBoolean("visible",true),l.optDouble("opacity",1.0).toFloat()))}; if(layers.isEmpty()) layers.add(Layer())
+        val layers=mutableListOf<Layer>(); val ls=o.optJSONArray("layers") ?: JSONArray(); for(i in 0 until ls.length()){val l=ls.getJSONObject(i); layers.add(
+    Layer(
+        l.getString("id"),
+        l.getString("name"),
+        l.optBoolean("visible", true),
+        l.optDouble("opacity", 1.0).toFloat(),
+        l.optBoolean("clipToBelow", false),
+        l.optString("blendMode", "NORMAL")
+    )
+)}; if(layers.isEmpty()) layers.add(Layer())
         val audio = if (o.isNull("audioPath")) null else o.optString("audioPath", null)
         val clips = mutableListOf<com.smitnk.motioncanvas.audio.AudioClip>(); val ac=o.optJSONArray("audioClips") ?: JSONArray(); for(i in 0 until ac.length()){ val q=ac.getJSONObject(i); clips.add(com.smitnk.motioncanvas.audio.AudioClip(q.optString("id"),q.optString("uri"),q.optInt("startFrame",0),q.optInt("durationFrames",1),q.optDouble("volume",1.0).toFloat(),q.optBoolean("muted",false),q.optInt("inFrame",0),q.optInt("outFrame",Int.MAX_VALUE),q.optInt("fadeInFrames",0),q.optInt("fadeOutFrames",0))) }
         val tracks = mutableListOf<com.smitnk.motioncanvas.audio.AudioTrack>(); val ats=o.optJSONArray("audioTracks") ?: JSONArray(); for(i in 0 until ats.length()){ val t=ats.getJSONObject(i); val tc=mutableListOf<com.smitnk.motioncanvas.audio.AudioClip>(); val ca=t.optJSONArray("clips") ?: JSONArray(); for(j in 0 until ca.length()){ val q=ca.getJSONObject(j); tc.add(com.smitnk.motioncanvas.audio.AudioClip(q.optString("id"),q.optString("uri"),q.optInt("startFrame",0),q.optInt("durationFrames",1),q.optDouble("volume",1.0).toFloat(),q.optBoolean("muted",false),q.optInt("inFrame",0),q.optInt("outFrame",Int.MAX_VALUE),q.optInt("fadeInFrames",0),q.optInt("fadeOutFrames",0))) }; tracks.add(com.smitnk.motioncanvas.audio.AudioTrack(t.optString("id","track-$i"),t.optString("name","Audio ${i+1}"),tc,t.optBoolean("enabled",true))) }
