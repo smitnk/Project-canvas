@@ -157,6 +157,15 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tpaletteutil.cpp
     opentoonz/toonz/sources/common/tvectorimage/drawutil.cpp
     opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
+    opentoonz/toonz/sources/common/trop/tropcm.cpp
+    opentoonz/toonz/sources/common/trop/toperators.cpp
+    opentoonz/toonz/sources/common/tcolor/tpixelutils.cpp
+    opentoonz/toonz/sources/common/trasterimage/trasterimage.cpp
+    opentoonz/toonz/sources/common/ttoonzimage/ttonzimage.cpp
+    opentoonz/toonz/sources/common/tcache/timagecache.cpp
+    opentoonz/toonz/sources/common/timage_io/timage_io.cpp
+    opentoonz/toonz/sources/common/tsystem/tfilepath_io.cpp
+    opentoonz/toonz/sources/common/tsystem/tsystempd.cpp
     opentoonz/toonz/sources/common/tsystem/tfiletype.cpp
     opentoonz/toonz/sources/common/tstream/tstream.cpp
 
