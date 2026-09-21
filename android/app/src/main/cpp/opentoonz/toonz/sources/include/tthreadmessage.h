@@ -10,6 +10,7 @@
 
 #ifndef TNZCORE_LIGHT
 #include <QMutex>
+#include <QMutexLocker>
 #else
 #include <windows.h>
 #endif
