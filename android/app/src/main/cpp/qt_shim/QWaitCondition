@@ -1,0 +1,32 @@
+#pragma once
+#include "QMutex"
+#include <condition_variable>
+#include <chrono>
+
+class QWaitCondition {
+public:
+  QWaitCondition() = default;
+  ~QWaitCondition() = default;
+
+  bool wait(QMutex *mutex, unsigned long time = 0xFFFFFFFFUL) {
+    if (!mutex) return false;
+
+    std::unique_lock<std::recursive_mutex> lock(mutex->stdMutex(), std::adopt_lock);
+    if (time == 0xFFFFFFFFUL) {
+      m_condition.wait(lock);
+      lock.release();
+      return true;
+    }
+
+    const auto result = m_condition.wait_for(
+        lock, std::chrono::milliseconds(time));
+    lock.release();
+    return result != std::cv_status::timeout;
+  }
+
+  void wakeOne() { m_condition.notify_one(); }
+  void wakeAll() { m_condition.notify_all(); }
+
+private:
+  std::condition_variable_any m_condition;
+};
