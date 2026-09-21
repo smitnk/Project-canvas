@@ -1798,6 +1798,9 @@ fun EditorScreen(
                 )
             }
 
+            // One native session per pointer stroke. Always closed on UP/CANCEL.
+            var nativeStrokeActive by remember { mutableStateOf(false) }
+
             // Interactive Canvas with Zoom, Pan, and Gesture Support
             Box(
                 modifier = Modifier
@@ -1899,14 +1902,17 @@ fun EditorScreen(
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
                                     if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
                                         OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        OpenToonzDrawingEngine.beginStroke(
-                                            start = canvasPoint,
-                                            pressure = pressure,
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
+                                        runCatching {
+                                            OpenToonzDrawingEngine.beginStroke(
+                                                start = canvasPoint,
+                                                pressure = pressure,
+                                                baseSize = size,
+                                                color = if (tool == ToolType.Eraser) project.backgroundColor else color,
+                                                opacity = color.alpha,
+                                                isVector = tool != ToolType.Eraser
+                                            )
+                                            nativeStrokeActive = true
+                                        }.onFailure { nativeStrokeActive = false }
                                     }
                                 }
                             },
@@ -1995,9 +2001,7 @@ fun EditorScreen(
                                     }
                                 } else if (tool != ToolType.Eyedropper) {
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
-                                    }
+                                    if (nativeStrokeActive) OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
                                 }
                             },
                             onDrawEnd = {
@@ -2063,9 +2067,7 @@ fun EditorScreen(
                                         layerIndex = selectedLayerIndex,
                                         textured = texturedBrush && tool == ToolType.Brush
                                     )
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
-                                        committedPoints.size >= 4 &&
-                                        OpenToonzDrawingEngine.isNativeAvailable()) {
+                                    if (nativeStrokeActive) {
                                         runCatching {
                                             OpenToonzDrawingEngine.endStroke(
                                                 points = committedPoints.map {
@@ -2074,10 +2076,9 @@ fun EditorScreen(
                                                 baseSize = size
                                             )
                                         }.onSuccess { generated ->
-                                            if (generated.segments.isNotEmpty()) {
-                                                OpenToonzStrokeCache.put(committedStroke.id, generated)
-                                            }
+                                            if (generated.segments.isNotEmpty()) OpenToonzStrokeCache.put(committedStroke.id, generated)
                                         }
+                                        nativeStrokeActive = false
                                     }
                                     history.addStroke(committedStroke)
                                     currentDrawingPoints.clear()
