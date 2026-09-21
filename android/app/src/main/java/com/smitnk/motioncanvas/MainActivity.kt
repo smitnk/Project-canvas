@@ -1781,6 +1781,8 @@ fun EditorScreen(
                 }
             }
 
+            }
+
             // Explicit project artboard viewport. The workspace is not the drawing canvas.
             var artboardWorkspaceSize by remember { mutableStateOf(IntSize.Zero) }
             val artboardViewport = remember(
