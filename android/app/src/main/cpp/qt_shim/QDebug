@@ -1,0 +1,28 @@
+#pragma once
+
+#include <iostream>
+#include <utility>
+
+class QDebug {
+public:
+  QDebug() = default;
+  QDebug(const QDebug &) = delete;
+  QDebug &operator=(const QDebug &) = delete;
+
+  QDebug(QDebug &&) = default;
+  QDebug &operator=(QDebug &&) = default;
+
+  ~QDebug() {
+    std::cerr << std::endl;
+  }
+
+  template <typename T>
+  QDebug &operator<<(const T &value) {
+    std::cerr << value;
+    return *this;
+  }
+};
+
+inline QDebug qDebug() {
+  return QDebug();
+}
