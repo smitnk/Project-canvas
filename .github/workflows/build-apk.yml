@@ -3,6 +3,8 @@ name: Project Canvas Android Build
 on:
   push:
     branches: [main, fix/tgl-extra-namespace-v2]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
