@@ -96,6 +96,44 @@ public:
     }
   }
 
+  // Qt-compatible append overloads used by OpenToonz tstream and core code.
+  // Keep the existing std::string-based shim architecture; do not replace QString.
+  QString &append(char c) {
+    push_back(c);
+    return *this;
+  }
+
+  QString &append(QChar c) {
+    push_back(c.toLatin1());
+    return *this;
+  }
+
+  QString &append(const char *s) {
+    if (s) std::string::append(s);
+    return *this;
+  }
+
+  QString &append(const char *s, int len) {
+    if (s && len > 0) std::string::append(s, static_cast<size_t>(len));
+    return *this;
+  }
+
+  QString &append(const QString &s) {
+    std::string::append(static_cast<const std::string &>(s));
+    return *this;
+  }
+
+  QString &append(const std::string &s) {
+    std::string::append(s);
+    return *this;
+  }
+
+  QString &operator+=(char c) { return append(c); }
+  QString &operator+=(QChar c) { return append(c); }
+  QString &operator+=(const char *s) { return append(s); }
+  QString &operator+=(const QString &s) { return append(s); }
+  QString &operator+=(const std::string &s) { return append(s); }
+
   bool isNull() const { return empty(); }
   bool isEmpty() const { return empty(); }
 
