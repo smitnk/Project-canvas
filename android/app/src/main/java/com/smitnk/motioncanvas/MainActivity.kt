@@ -305,39 +305,50 @@ private fun renderLayerComposite(project: Project, frame: Frame, textureAmount: 
 @Composable
 fun MotionCanvasApp() {
     var screen by remember { mutableStateOf(ScreenType.HOME) }
-    var projects by remember {
+    val context = LocalContext.current
+    var projects by remember(context) {
         mutableStateOf(
-            listOf(
-                Project(
-                    name = "My Animation",
-                    fps = 12,
-                    frames = mutableListOf(
-                        Frame(
-                            strokes = mutableListOf(
-                                DrawStroke(
-                                    points = listOf(DrawPoint(100f, 150f), DrawPoint(150f, 100f), DrawPoint(200f, 150f)),
-                                    color = Color.Black,
-                                    strokeWidth = 10f
+            ProjectRepository.loadAll(context).ifEmpty {
+                listOf(
+                    Project(
+                        name = "My Animation",
+                        fps = 12,
+                        frames = mutableListOf(
+                            Frame(
+                                strokes = mutableListOf(
+                                    DrawStroke(
+                                        points = listOf(
+                                            DrawPoint(100f, 150f),
+                                            DrawPoint(150f, 100f),
+                                            DrawPoint(200f, 150f)
+                                        ),
+                                        color = Color.Black,
+                                        strokeWidth = 10f
+                                    )
                                 )
-                            )
-                        ),
-                        Frame(
-                            strokes = mutableListOf(
-                                DrawStroke(
-                                    points = listOf(DrawPoint(120f, 160f), DrawPoint(170f, 110f), DrawPoint(220f, 160f)),
-                                    color = Color.Black,
-                                    strokeWidth = 10f
+                            ),
+                            Frame(
+                                strokes = mutableListOf(
+                                    DrawStroke(
+                                        points = listOf(
+                                            DrawPoint(120f, 160f),
+                                            DrawPoint(170f, 110f),
+                                            DrawPoint(220f, 160f)
+                                        ),
+                                        color = Color.Black,
+                                        strokeWidth = 10f
+                                    )
                                 )
                             )
                         )
+                    ),
+                    Project(
+                        name = "Walk Cycle",
+                        fps = 12,
+                        frames = mutableListOf(Frame(), Frame(), Frame())
                     )
-                ),
-                Project(
-                    name = "Walk Cycle",
-                    fps = 12,
-                    frames = mutableListOf(Frame(), Frame(), Frame())
                 )
-            )
+            }
         )
     }
 
@@ -397,7 +408,6 @@ fun MotionCanvasApp() {
     var timelineLoopMode by remember { mutableStateOf(com.smitnk.motioncanvas.animation.TimelineLoopMode.LOOP) }
     var copiedFrame by remember { mutableStateOf<Frame?>(null) }
     val brushPresetStore = remember { BrushPresetStore() }
-    val context = LocalContext.current
     val sharedAudioClock = remember { SharedAudioVideoClock(context) }
     DisposableEffect(Unit) { onDispose { sharedAudioClock.release() } }
     val autosaveStore = remember { com.smitnk.motioncanvas.project.AutosaveStore(context) }
@@ -406,7 +416,13 @@ fun MotionCanvasApp() {
     LaunchedEffect(activeProject) {
         while (activeProject != null) {
             delay(3000)
-            activeProject?.let { autosaveStore.save(it.id, ProjectRepository.encode(it).toString()) }
+            activeProject?.let { project ->
+                runCatching {
+                    val json = ProjectRepository.encode(project).toString()
+                    autosaveStore.save(project.id, json)
+                    ProjectRepository.save(context, project)
+                }
+            }
         }
     }
 
@@ -525,8 +541,12 @@ fun MotionCanvasApp() {
                 HomeScreen(
                     projects = projects,
                     onOpenProject = { proj ->
-                        activeProject = proj
+                        val loaded = ProjectRepository.load(context, proj.name) ?: proj
+                        activeProject = loaded
                         currentFrameIndex = 0
+                        selectedLayerIndex = 0
+                        isPlaying = false
+                        OpenToonzStrokeCache.clear()
                         screen = ScreenType.EDITOR
                     },
                     onCreateNew = {
@@ -546,8 +566,12 @@ fun MotionCanvasApp() {
                             backgroundColor = bg
                         )
                         projects = projects + newProj
+                        runCatching { ProjectRepository.save(context, newProj) }
                         activeProject = newProj
                         currentFrameIndex = 0
+                        selectedLayerIndex = 0
+                        isPlaying = false
+                        OpenToonzStrokeCache.clear()
                         screen = ScreenType.EDITOR
                     },
                     onSelectSize = { screen = ScreenType.SIZE },
