@@ -2056,14 +2056,18 @@ fun EditorScreen(
                                     if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
                                         committedPoints.size >= 4 &&
                                         OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        val generated = OpenToonzDrawingEngine.generateStroke(
-                                            points = committedPoints,
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
-                                        OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                        runCatching {
+                                            OpenToonzDrawingEngine.endStroke(
+                                                points = committedPoints.map {
+                                                    OpenToonzDrawingEngine.StrokePoint(Offset(it.x, it.y), it.pressure)
+                                                },
+                                                baseSize = size
+                                            )
+                                        }.onSuccess { generated ->
+                                            if (generated.segments.isNotEmpty()) {
+                                                OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                            }
+                                        }
                                     }
                                     history.addStroke(committedStroke)
                                     currentDrawingPoints.clear()
