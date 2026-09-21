@@ -759,8 +759,18 @@ TString TSystemException::getMessage() const {
 
 void TSystem::touchFile(const TFilePath &path) {
 #ifndef TNZCORE_LIGHT
-
-  // string filename = path.getFullPath();
+#ifdef __ANDROID__
+  struct stat st{};
+  const std::string native = ::to_string(path);
+  if (::stat(native.c_str(), &st) == 0) {
+    if (::utimes(native.c_str(), nullptr) != 0)
+      throw TSystemException(path, errno);
+  } else {
+    Tofstream file(path);
+    if (!file) throw TSystemException(path, errno);
+    file.close();
+  }
+#else
   if (TFileStatus(path).doesExist()) {
     int ret;
 #ifdef _WIN32
@@ -771,13 +781,10 @@ void TSystem::touchFile(const TFilePath &path) {
     if (0 != ret) throw TSystemException(path, errno);
   } else {
     Tofstream file(path);
-    if (!file) {
-      throw TSystemException(path, errno);
-    }
-    file.close();  // altrimenti il compilatore da' un warning:
-                   // variabile non utilizzata
+    if (!file) throw TSystemException(path, errno);
+    file.close();
   }
-
+#endif
 #endif
 }
 
