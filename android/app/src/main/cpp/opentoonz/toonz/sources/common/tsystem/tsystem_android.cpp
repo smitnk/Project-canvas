@@ -166,7 +166,7 @@ TSystemException::TSystemException(const TFilePath &p, const std::wstring &msg)
     : TException(msg), m_fname(p), m_err(0), m_msg(msg) {}
 
 TSystemException::TSystemException(const std::string &msg)
-    : TException(msg), m_err(0), m_msg(TString(msg.begin(), msg.end())) {}
+    : TException(msg), m_err(0), m_msg(std::wstring(msg.begin(), msg.end())) {}
 
 TSystemException::TSystemException(const std::wstring &msg)
     : TException(msg), m_err(0), m_msg(msg) {}
