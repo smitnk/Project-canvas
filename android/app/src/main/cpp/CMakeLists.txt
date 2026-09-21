@@ -42,8 +42,6 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tgeometry/tcurves.cpp
     opentoonz/toonz/sources/common/tgeometry/tcurveutil.cpp
     opentoonz/toonz/sources/common/tgeometry/tgeometry.cpp
-    opentoonz/toonz/sources/common/timage/timage.cpp
-    opentoonz/toonz/sources/common/timage/tlevel.cpp
     opentoonz/toonz/sources/common/tvectorimage/cornerdetector.cpp
     opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
@@ -60,9 +58,6 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tvectorimage/tcomputeregions.cpp
     opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
-    opentoonz/toonz/sources/common/tvrender/tpalette.cpp
-    opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
-    opentoonz/toonz/sources/common/tvrender/tsimplecolorstyles.cpp
 
     # Actual OpenToonz raster brush sources already present
     opentoonz/toonz/sources/toonzlib/rasterbrush.cpp
