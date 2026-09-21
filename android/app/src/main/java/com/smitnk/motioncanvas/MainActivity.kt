@@ -2421,7 +2421,8 @@ fun EditorScreen(
                                     val cloned = stroke.deepCopy()
                                     val movedPoints = cloned.points.map { p -> DrawPoint(p.x + offset.x, p.y + offset.y) }
                                     cloned.copy(points = movedPoints)
-                                }                                history.addStrokes(pasted)
+                                }
+                                history.addStrokes(pasted)
                                 selectedStrokeIds.clear()
                                 selectedStrokeIds.addAll(pasted.map { it.id })
                             }
