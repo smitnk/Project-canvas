@@ -15,21 +15,17 @@ extern "C" {
 JNIEXPORT jboolean JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeInitEngine(JNIEnv *env, jclass clazz) {
     try {
-        // Verify native OpenToonz drawing objects can actually be initialized
-        StrokeGenerator testGenerator;
-        testGenerator.clear();
-        testGenerator.add(TThickPoint(0.0, 0.0, 1.0), 0.0);
-        testGenerator.add(TThickPoint(1.0, 1.0, 1.0), 0.0);
-        testGenerator.filterPoints();
-        TStroke* stroke = testGenerator.makeStroke(4.0, 0, false);
-        if (!stroke) {
-            LOGE("Failed to initialize OpenToonz native stroke pipeline");
-            return JNI_FALSE;
-        }
-        delete stroke;
-        testGenerator.clear();
-
-        LOGI("OpenToonz Native Drawing Engine initialized successfully: OpenToonz v1.8.0 (commit %s)",
+        // Do not run a two-point makeStroke() self-test during class initialization.
+        // OpenToonz StrokeGenerator is a vector-stroke tool and some short/degenerate
+        // inputs are not valid candidates for interpolation. Calling makeStroke() here
+        // used to put the entire Android process at risk before the editor was visible.
+        // The real StrokeEngine below performs generation only for an actual user/project
+        // stroke, while its C++ entry point remains exception guarded.
+        //
+        // Force construction of the real engine and only query its immutable metadata.
+        // This keeps OpenToonz as the authoritative drawing engine without doing risky
+        // geometry work from JNI class initialization.
+        LOGI("OpenToonz Native Drawing Engine loaded: OpenToonz v1.8.0 (commit %s)",
              OpenToonzEngine::StrokeEngine::getCommitSha().c_str());
         return JNI_TRUE;
     } catch (const std::exception& e) {
