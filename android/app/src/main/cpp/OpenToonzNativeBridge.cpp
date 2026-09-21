@@ -73,11 +73,12 @@ Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeAddPoint(
 JNIEXPORT jfloatArray JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeEndStroke(JNIEnv *env, jclass clazz) {
     LOGI("nativeEndStroke: invoking OpenToonz StrokeGenerator::filterPoints() and makeStroke() / TStroke::interpolate()");
-    OpenToonzEngine::StrokeResult result = g_engine.endStroke();
-    LOGI("nativeEndStroke: stroke generated with %zu quadratic segments, bbox=[%.2f, %.2f, %.2f, %.2f]",
-         result.segments.size(), result.minX, result.minY, result.maxX, result.maxY);
-    
-    // Pack into flat float array:
+    try {
+        OpenToonzEngine::StrokeResult result = g_engine.endStroke();
+        LOGI("nativeEndStroke: stroke generated with %zu quadratic segments, bbox=[%.2f, %.2f, %.2f, %.2f]",
+             result.segments.size(), result.minX, result.minY, result.maxX, result.maxY);
+
+        // Pack into flat float array:
     // [segmentCount, minX, minY, maxX, maxY, (for each seg: p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, startThick, midThick, endThick)]
     const size_t segCount = result.segments.size();
     const size_t floatCount = 5 + segCount * 9;
@@ -107,7 +108,14 @@ Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeEndStroke(JNIEn
     if (arr != nullptr) {
         env->SetFloatArrayRegion(arr, 0, (jsize)floatCount, buffer.data());
     }
-    return arr;
+        return arr;
+    } catch (const std::exception& e) {
+        LOGE("nativeEndStroke OpenToonz exception: %s", e.what());
+        return nullptr;
+    } catch (...) {
+        LOGE("nativeEndStroke OpenToonz unknown exception");
+        return nullptr;
+    }
 }
 
 JNIEXPORT void JNICALL
