@@ -10,6 +10,10 @@
 
 namespace Qt {
 enum SplitBehavior { KeepEmptyParts, SkipEmptyParts };
+enum Key {
+  Key_0 = '0', Key_1 = '1', Key_2 = '2', Key_3 = '3', Key_4 = '4',
+  Key_5 = '5', Key_6 = '6', Key_7 = '7', Key_8 = '8', Key_9 = '9'
+};
 }
 
 class QStringList;
@@ -93,6 +97,7 @@ public:
   }
 
   bool isNull() const { return empty(); }
+  bool isEmpty() const { return empty(); }
 
   QStringList split(char separator, Qt::SplitBehavior behavior) const;
 
@@ -111,11 +116,33 @@ private:
   }
 };
 
+inline QString operator+(const QString& a, const QString& b) {
+  return QString(static_cast<const std::string&>(a) +
+                 static_cast<const std::string&>(b));
+}
+inline QString operator+(const char* a, const QString& b) {
+  return QString(a ? a : "") + b;
+}
+inline QString operator+(const QString& a, const char* b) {
+  return a + QString(b);
+}
+
 class QStringList : public std::vector<QString> {
 public:
   using std::vector<QString>::vector;
   bool isEmpty() const { return empty(); }
   int count() const { return static_cast<int>(size()); }
+  bool contains(const QString& value) const {
+    return std::find(begin(), end(), value) != end();
+  }
+  QString join(const QString& separator) const {
+    QString result;
+    for (size_t i = 0; i < size(); ++i) {
+      if (i) result += separator;
+      result += (*this)[i];
+    }
+    return result;
+  }
 };
 
 inline QStringList QString::split(char separator, Qt::SplitBehavior behavior) const {
