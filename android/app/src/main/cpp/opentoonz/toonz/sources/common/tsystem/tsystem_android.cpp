@@ -129,8 +129,6 @@ TFilePath toUNC(const TFilePath &fp) { return fp; }
 TFilePath toLocalPath(const TFilePath &fp) { return fp; }
 bool showDocument(const TFilePath &) { return false; }
 bool isDLLBlackListed(QString) { return false; }
-void outputDebug(std::string s) { std::fprintf(stderr, "%s\n", s.c_str()); }
-
 void sleep(TINT64 delay) {
   std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 }
