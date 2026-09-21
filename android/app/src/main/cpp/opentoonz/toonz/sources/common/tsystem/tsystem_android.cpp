@@ -47,6 +47,20 @@ void readDirectory(TFilePathSet &out, const TFilePathSet &paths,
     readDirectory(out, p, groupFrames, onlyFiles, getHiddenFiles);
 }
 
+TFilePathSet readDirectory(const TFilePath &path, bool groupFrames,
+                          bool onlyFiles, bool getHiddenFiles) {
+  TFilePathSet out;
+  readDirectory(out, path, groupFrames, onlyFiles, getHiddenFiles);
+  return out;
+}
+
+TFilePathSet readDirectory(const TFilePathSet &paths, bool groupFrames,
+                          bool onlyFiles, bool getHiddenFiles) {
+  TFilePathSet out;
+  readDirectory(out, paths, groupFrames, onlyFiles, getHiddenFiles);
+  return out;
+}
+
 bool doesExistFileOrLevel(const TFilePath &fp) {
   std::error_code ec;
   return std::filesystem::exists(std::filesystem::path(nativePath(fp)), ec);
