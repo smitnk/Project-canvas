@@ -129,7 +129,6 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrush.cpp
     opentoonz/toonz/sources/common/tgl/tgl.cpp
     opentoonz/toonz/sources/common/tsystem/tbigmemorymanager.cpp
-    opentoonz/toonz/sources/image/tiio.cpp
     opentoonz/toonz/sources/common/trop/trop.cpp
     opentoonz/toonz/sources/common/trop/tresample.cpp
     opentoonz/toonz/sources/common/trop/quickput.cpp
