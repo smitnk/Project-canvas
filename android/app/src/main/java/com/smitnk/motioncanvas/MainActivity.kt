@@ -49,6 +49,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import com.smitnk.motioncanvas.ui.theme.*
 import com.smitnk.motioncanvas.brush.CustomBrushPreset
@@ -1305,16 +1306,11 @@ fun EditorScreen(
     }
 
     if (showColorPicker) {
-        AdvancedColorPickerDialog(
+        ProfessionalColorWheelDialog(
             currentColor = color,
-            recentColors = recentColors,
-            customPalette = customPalette,
-            onColorChanged = { newColor ->
-                onColorChange(newColor)
-            },
-            onSaveToPalette = onSaveToPalette,
-            onRemoveFromPalette = onRemoveFromPalette,
+            onColorChanged = onColorChange,
             onEyedropperClick = {
+                showColorPicker = false
                 onToolChange(ToolType.Eyedropper)
             },
             onDismiss = { showColorPicker = false }
@@ -1322,50 +1318,19 @@ fun EditorScreen(
     }
 
     if (showBrushPresets) {
-        AlertDialog(
-            onDismissRequest = { showBrushPresets = false },
-            title = { Text("Brush Presets") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = presetName,
-                        onValueChange = { presetName = it },
-                        label = { Text("Preset name") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Text("Current: ${size.toInt()} px", color = TextSecondary)
-                    Text("Saved presets", fontWeight = FontWeight.SemiBold)
-                    if (brushPresetStore.presets.isEmpty()) Text("No presets yet", color = TextSecondary)
-                    brushPresetStore.presets.forEach { preset ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                onColorChange(preset.color)
-                                onSizeChange(preset.width)
-                                showBrushPresets = false
-                            }.padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(Modifier.size(24.dp).clip(CircleShape).background(preset.color))
-                            Spacer(Modifier.width(10.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(preset.name)
-                                Text("${preset.width.toInt()} px", color = TextSecondary, fontSize = 12.sp)
-                            }
-                            IconButton(onClick = { brushPresetStore.remove(preset.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete preset")
-                            }
-                        }
-                    }
+        ProfessionalBrushLibraryDialog(
+            onApply = { preset ->
+                onColorChange(color)
+                onSizeChange(preset.size)
+                onTexturedBrushChange(preset.textured)
+                if (preset.name.contains("Eraser", ignoreCase = true)) {
+                    onToolChange(ToolType.Eraser)
+                } else {
+                    onToolChange(ToolType.Brush)
                 }
+                showBrushPresets = false
             },
-            confirmButton = {
-                TextButton(enabled = presetName.isNotBlank(), onClick = {
-                    brushPresetStore.add(CustomBrushPreset(name = presetName.trim(), color = color, width = size, alpha = color.alpha))
-                    presetName = ""
-                }) { Text("Save current") }
-            },
-            dismissButton = { TextButton(onClick = { showBrushPresets = false }) { Text("Close") } }
+            onDismiss = { showBrushPresets = false }
         )
     }
 
@@ -1756,6 +1721,21 @@ fun EditorScreen(
                 }
             }
 
+            // Explicit project artboard viewport. The workspace is not the drawing canvas.
+            var artboardWorkspaceSize by remember { mutableStateOf(IntSize.Zero) }
+            val artboardViewport = remember(
+                artboardWorkspaceSize,
+                project.canvasW,
+                project.canvasH
+            ) {
+                ArtboardViewport(
+                    workspaceWidth = artboardWorkspaceSize.width.toFloat(),
+                    workspaceHeight = artboardWorkspaceSize.height.toFloat(),
+                    canvasWidth = project.canvasW.toFloat(),
+                    canvasHeight = project.canvasH.toFloat()
+                )
+            }
+
             // Interactive Canvas with Zoom, Pan, and Gesture Support
             Box(
                 modifier = Modifier
@@ -1763,7 +1743,8 @@ fun EditorScreen(
                     .fillMaxHeight()
                     .padding(8.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(project.backgroundColor)
+                    .background(Color(0xFF202124))
+                    .onSizeChanged { artboardWorkspaceSize = it }
                     .pointerInput(referenceEditMode, referenceBitmap, zoomPanState.zoom) {
                         if (referenceEditMode && referenceBitmap != null) {
                             detectTransformGestures { _, panChange, zoomChange, rotationChange ->
@@ -1782,7 +1763,10 @@ fun EditorScreen(
                         detectZoomPanOrDraw(
                             isPanTool = (tool == ToolType.Pan),
                             zoomPanState = zoomPanState,
-                            onDrawStart = { canvasPoint, pressure ->
+                            onDrawStart = { screenPoint, pressure ->
+                                val canvasPoint = artboardViewport.screenToArtboard(
+                                    screenPoint, zoomPanState.zoom, zoomPanState.pan
+                                )
                                 if (tool == ToolType.Eyedropper) {
                                     var sampled = project.backgroundColor
                                     val hitDistSq = 36f * 36f
@@ -1851,7 +1835,10 @@ fun EditorScreen(
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
                                 }
                             },
-                            onDraw = { canvasPoint, pressure ->
+                            onDraw = { screenPoint, pressure ->
+                                val canvasPoint = artboardViewport.screenToArtboard(
+                                    screenPoint, zoomPanState.zoom, zoomPanState.pan
+                                )
                                 if (tool == ToolType.Lasso) {
                                     lassoPoints = lassoPoints + canvasPoint
                                 } else if (tool == ToolType.Select) {
@@ -2032,25 +2019,37 @@ fun EditorScreen(
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val canvasSize = drawContext.size
-                    // Apply zoom and pan transformation to canvas rendering
-                    translate(left = zoomPanState.pan.x, top = zoomPanState.pan.y) {
-                        scale(scale = zoomPanState.zoom, pivot = Offset.Zero) {
+                    val artboardOrigin = artboardViewport.origin(
+                        zoomPanState.zoom, zoomPanState.pan
+                    )
+                    val artboardScale = artboardViewport.effectiveScale(zoomPanState.zoom)
+
+                    // Explicit centered project artboard. Everything inside uses project coordinates.
+                    translate(left = artboardOrigin.x, top = artboardOrigin.y) {
+                        scale(scale = artboardScale, pivot = Offset.Zero) {
+                            drawRect(
+                                color = project.backgroundColor,
+                                topLeft = Offset.Zero,
+                                size = androidx.compose.ui.geometry.Size(
+                                    project.canvasW.toFloat(), project.canvasH.toFloat()
+                                )
+                            )
                             // Grid
                             if (grid) {
                                 val step = 40.dp.toPx()
-                                for (x in 0 until (canvasSize.width / step).toInt()) {
+                                for (x in 0 until (project.canvasW / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(x * step, 0f),
-                                        end = Offset(x * step, canvasSize.height),
+                                        end = Offset(x * step, project.canvasH.toFloat()),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
-                                for (y in 0 until (canvasSize.height / step).toInt()) {
+                                for (y in 0 until (project.canvasH / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(0f, y * step),
-                                        end = Offset(canvasSize.width, y * step),
+                                        end = Offset(project.canvasW.toFloat(), y * step),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
