@@ -144,6 +144,7 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
+    opentoonz/toonz/sources/common/tcore/tstopwatch.cpp
 
     # Recovered OpenToonz v1.8.0 implementations required by the drawing dependency chain
     opentoonz/toonz/sources/common/traster/traster.cpp
@@ -167,6 +168,7 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/timage_io/timage_io.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath_io.cpp
     opentoonz/toonz/sources/common/tsystem/tsystempd.cpp
+    opentoonz/toonz/sources/common/tsystem/tsystem.cpp
     opentoonz/toonz/sources/common/tsystem/tfiletype.cpp
     opentoonz/toonz/sources/common/tstream/tstream.cpp
 
@@ -178,6 +180,7 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
 
     # Missing but required implementations in the OpenToonz v1.8.0 dependency chain
     opentoonz/toonz/sources/common/timage/timage.cpp
+    opentoonz/toonz/sources/common/timage/tlevel.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
     opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
     opentoonz/toonz/sources/common/tvrender/tpalette.cpp
@@ -185,6 +188,8 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tofflinegl.cpp
 
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
+    opentoonz/toonz/sources/common/tvrender/tstrokeprop.cpp
+    opentoonz/toonz/sources/common/tgl/tstencilcontrol.cpp
 
     # ------------------------------------------------------
     # Actual OpenToonz raster brush sources already present
