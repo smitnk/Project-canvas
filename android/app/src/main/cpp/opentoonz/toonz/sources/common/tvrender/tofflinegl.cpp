@@ -11,8 +11,10 @@
 #include "trop.h"
 
 #if defined(__ANDROID__)
+// EGL is the Android context/lifecycle API. OpenToonz rendering headers must
+// receive the desktop-style GL API from GL4ES; do not include Android GLES2
+// headers in this translation unit because their typedefs conflict with GL4ES.
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #endif
 
 // Platform-specific includes
