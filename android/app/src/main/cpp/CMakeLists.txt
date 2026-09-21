@@ -171,6 +171,7 @@ opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tcache/timagecache.cpp
     opentoonz/toonz/sources/common/timage_io/timage_io.cpp
     opentoonz/toonz/sources/common/timage_io/tlevel_io.cpp
+    opentoonz/toonz/sources/common/timage_io/tlevel_io_android.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath_io.cpp
     opentoonz/toonz/sources/common/tsystem/tsystempd.cpp
     opentoonz/toonz/sources/common/tsystem/tsystem_android.cpp
