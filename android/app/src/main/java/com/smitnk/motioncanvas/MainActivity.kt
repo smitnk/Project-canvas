@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.smitnk.motioncanvas
 
 import android.os.Bundle
@@ -243,10 +245,29 @@ private fun renderLayerComposite(project: Project, frame: Frame, textureAmount: 
             paint.strokeWidth = s.strokeWidth.coerceAtLeast(1f)
             paint.strokeCap = AndroidPaint.Cap.ROUND
             paint.strokeJoin = AndroidPaint.Join.ROUND
-            val path = android.graphics.Path()
-            path.moveTo(s.points.first().x, s.points.first().y)
-            s.points.drop(1).forEach { path.lineTo(it.x, it.y) }
-            lc.drawPath(path, paint)
+            // Render committed strokes from the real OpenToonz TStroke geometry.
+            // OpenToonzStrokeCache regenerates the native vector geometry from the
+            // persisted input points when needed, while Android Canvas remains only
+            // the final display surface.
+            val openToonzStroke = OpenToonzStrokeCache.getOrGenerate(s)
+            if (openToonzStroke != null && openToonzStroke.segments.isNotEmpty()) {
+                val path = android.graphics.Path()
+                val first = openToonzStroke.segments.first()
+                path.moveTo(first.p0.x, first.p0.y)
+                openToonzStroke.segments.forEach { segment ->
+                    path.quadTo(
+                        segment.p1.x, segment.p1.y,
+                        segment.p2.x, segment.p2.y
+                    )
+                }
+                lc.drawPath(path, paint)
+            } else {
+                // Safe fallback only if the native OpenToonz engine is unavailable.
+                val path = android.graphics.Path()
+                path.moveTo(s.points.first().x, s.points.first().y)
+                s.points.drop(1).forEach { path.lineTo(it.x, it.y) }
+                lc.drawPath(path, paint)
+            }
             if (s.textured) {
                 AdvancedBrushEngine.draw(
                     canvas = lc,

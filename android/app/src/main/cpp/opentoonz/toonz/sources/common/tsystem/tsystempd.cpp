@@ -15,6 +15,11 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+// Android shim for qDebug() used by the OpenToonz system layer.
+#ifdef __ANDROID__
+#include "QDebug"
+#endif
+
 // Project-specific headers
 #include "tsystem.h"
 //#include "tunicode.h"  // Uncomment if needed
@@ -46,6 +51,10 @@
 // #include "lmcons.h"
 #endif
 
+#if defined(__ANDROID__) && !defined(LINUX)
+#define LINUX 1
+#endif
+
 #ifdef LINUX
 #define PLATFORM LINUX
 #include <grp.h>
@@ -54,6 +63,13 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <dirent.h>
+#ifdef __ANDROID__
+#include <sys/sysinfo.h>
+#include <sys/vfs.h>
+#include <pwd.h>
+#include <dlfcn.h>
+#include <sys/time.h>
+#else
 #include <sys/dir.h>
 #include <sys/sysinfo.h>
 #include <sys/swap.h>
@@ -62,13 +78,16 @@
 #include <mntent.h>
 #include <dlfcn.h>
 #include <sys/time.h>
+#endif
 
-// Qt headers for Linux
+// Qt headers for desktop Linux only. Android uses the native deleteFile() path.
+#ifndef __ANDROID__
 #include <QDir>
 #include <QFileInfo>
 #include <QStorageInfo>
 #include <QTextStream>
 #include <QUrl>
+#endif
 #endif
 
 #ifdef FREEBSD
@@ -568,6 +587,9 @@ void TSystem::moveFileToRecycleBin(const TFilePath &fp) {
     } catch (...) {
     }
   }
+#elif defined(__ANDROID__)
+  // Android has no desktop recycle-bin integration in this native engine.
+  deleteFile(fp);
 #elif defined(LINUX)
   //
   // From https://stackoverflow.com/questions/17964439/move-files-to-trash-recycle-bin-in-qt
@@ -737,8 +759,18 @@ TString TSystemException::getMessage() const {
 
 void TSystem::touchFile(const TFilePath &path) {
 #ifndef TNZCORE_LIGHT
-
-  // string filename = path.getFullPath();
+#ifdef __ANDROID__
+  struct stat st{};
+  const std::string native = ::to_string(path);
+  if (::stat(native.c_str(), &st) == 0) {
+    if (::utimes(native.c_str(), nullptr) != 0)
+      throw TSystemException(path, errno);
+  } else {
+    Tofstream file(path);
+    if (!file) throw TSystemException(path, errno);
+    file.close();
+  }
+#else
   if (TFileStatus(path).doesExist()) {
     int ret;
 #ifdef _WIN32
@@ -749,13 +781,10 @@ void TSystem::touchFile(const TFilePath &path) {
     if (0 != ret) throw TSystemException(path, errno);
   } else {
     Tofstream file(path);
-    if (!file) {
-      throw TSystemException(path, errno);
-    }
-    file.close();  // altrimenti il compilatore da' un warning:
-                   // variabile non utilizzata
+    if (!file) throw TSystemException(path, errno);
+    file.close();
   }
-
+#endif
 #endif
 }
 

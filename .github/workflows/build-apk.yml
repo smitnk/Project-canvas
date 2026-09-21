@@ -2,6 +2,8 @@ name: Project Canvas Android Build
 
 on:
   push:
+    branches: [main, fix/tgl-extra-namespace-v2]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -43,6 +45,12 @@ jobs:
           mv app/src/main/cpp/glu-9.0.3 app/src/main/cpp/glu
           test -d app/src/main/cpp/glu/src
 
+          curl -L --fail https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz -o /tmp/boost_1_85_0.tar.gz
+          tar -xzf /tmp/boost_1_85_0.tar.gz -C app/src/main/cpp
+          mv app/src/main/cpp/boost_1_85_0 app/src/main/cpp/boost
+          test -f app/src/main/cpp/boost/boost/config.hpp
+          test -f app/src/main/cpp/boost/boost/range.hpp
+
           git clone --depth 1 --branch v1.9.4 https://github.com/lz4/lz4.git app/src/main/cpp/lz4
           test -f app/src/main/cpp/lz4/lib/lz4frame.h
           test -f app/src/main/cpp/lz4/build/cmake/CMakeLists.txt
@@ -64,7 +72,17 @@ jobs:
 
       - name: Assemble debug APK
         working-directory: android
-        run: ./gradlew :app:assembleDebug --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee ../android-build.log
+
+      - name: Upload native build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-canvas-native-build-log
+          path: android-build.log
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
