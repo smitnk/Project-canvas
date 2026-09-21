@@ -6,18 +6,24 @@ public:
   explicit QMutexLocker(QMutex *m) : m_ptr(m) {
     if (m_ptr) m_ptr->lock();
   }
+
   ~QMutexLocker() {
     if (m_ptr) m_ptr->unlock();
   }
+
   void relock() {
     if (m_ptr) m_ptr->lock();
   }
+
   void unlock() {
     if (m_ptr) {
       m_ptr->unlock();
       m_ptr = nullptr;
     }
   }
+
+  QMutex* mutex() const { return m_ptr; }
+
 private:
   QMutex *m_ptr;
 };
