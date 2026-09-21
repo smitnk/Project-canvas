@@ -1,8 +1,19 @@
 #pragma once
+#include <cctype>
+
 class QChar {
   char m_c;
 public:
   QChar(char c = 0) : m_c(c) {}
   operator char() const { return m_c; }
   bool isNull() const { return m_c == 0; }
+  bool isDigit() const {
+    return std::isdigit(static_cast<unsigned char>(m_c)) != 0;
+  }
+  bool isLetter() const {
+    return std::isalpha(static_cast<unsigned char>(m_c)) != 0;
+  }
+  char toLatin1() const { return m_c; }
+  bool operator==(QChar other) const { return m_c == other.m_c; }
+  bool operator!=(QChar other) const { return m_c != other.m_c; }
 };
