@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cstdio>
 #include <utility>
 
 class QDebug {
@@ -24,5 +25,11 @@ public:
 };
 
 inline QDebug qDebug() {
+  return QDebug();
+}
+
+template <typename... Args>
+inline QDebug qDebug(const char *format, Args... args) {
+  std::fprintf(stderr, format, args...);
   return QDebug();
 }
