@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.github.antonpopoff.ColorWheel
+import com.github.antonpopoff.colorwheel.ColorWheel
 
 data class ArtboardViewport(
     val workspaceWidth: Float,
@@ -122,11 +122,9 @@ fun ProfessionalColorWheelDialog(
 ) {
     var selectedArgb by remember(currentColor) { mutableIntStateOf(currentColor.toArgb()) }
     var value by remember(currentColor) {
-        mutableFloatStateOf(
-            FloatArray(3).also {
-                android.graphics.Color.colorToHSV(currentColor.toArgb(), it)
-            }[2]
-        )
+        FloatArray(3).also {
+            android.graphics.Color.colorToHSV(currentColor.toArgb(), it)
+        }[2]
     }
     var alpha by remember(currentColor) { mutableFloatStateOf(currentColor.alpha) }
 
@@ -140,7 +138,7 @@ fun ProfessionalColorWheelDialog(
                     factory = { context ->
                         ColorWheel(context).apply {
                             rgb = currentColor.toArgb()
-                            colorChangeListener = { rgb ->
+                            colorChangeListener = { rgb: Int ->
                                 selectedArgb = rgb
                                 val c = Color(rgb)
                                 value = c.value
