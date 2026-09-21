@@ -5,9 +5,13 @@
 
 #include "tcommon.h"
 
-#include <QProcess>
 #include <QString>
 #include <QStringList>
+
+// Android build: these Qt types are used only by reference in this interface.
+// Keep the OpenToonz native core independent of the full Qt process subsystem.
+class QProcess;
+class QByteArray;
 
 #undef DVAPI
 #ifdef TOONZLIB_EXPORTS
