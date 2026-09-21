@@ -1201,6 +1201,7 @@ fun EditorScreen(
     onAdvancedWorkspaceStateChange: (AdvancedWorkspaceState) -> Unit = {},
     onOpenMore: () -> Unit = {}
 ) {
+    if (project.frames.isEmpty()) return
     val currentFrame = project.frames.getOrNull(frameIndex) ?: project.frames.first()
     // Layer selection is not yet exposed by EditorScreen; keep drawing on the base layer until the layer UI supplies an index.
     val selectedLayerIndex = 0
@@ -1236,7 +1237,9 @@ fun EditorScreen(
         if (granted && !isRecording) { recorder.start(); isRecording = true }
     }
     LaunchedEffect(project.audioPath) {
-        waveform = project.audioPath?.let { AudioWaveformAnalyzer.analyze(it, 160) } ?: emptyList()
+        waveform = project.audioPath?.let { path ->
+            runCatching { AudioWaveformAnalyzer.analyze(path, 160) }.getOrDefault(emptyList())
+        } ?: emptyList()
     }
     LaunchedEffect(frameIndex, rotoscopeFrames) {
         if (rotoscopeFrames.isNotEmpty()) referenceBitmap = rotoscopeFrames.getOrNull(frameIndex)?.let { it } ?: referenceBitmap
