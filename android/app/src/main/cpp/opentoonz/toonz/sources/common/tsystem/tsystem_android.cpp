@@ -37,7 +37,7 @@ void readDirectory(TFilePathSet &out, const TFilePath &path,
     const std::string name = entry.path().filename().string();
     if (!getHiddenFiles && !name.empty() && name[0] == '.') continue;
     if (onlyFiles && !entry.is_regular_file(ec)) continue;
-    out.insert(TFilePath(entry.path().string()));
+    out.push_back(TFilePath(entry.path().string()));
   }
 }
 
@@ -166,7 +166,7 @@ TSystemException::TSystemException(const TFilePath &p, const std::wstring &msg)
     : TException(msg), m_fname(p), m_err(0), m_msg(msg) {}
 
 TSystemException::TSystemException(const std::string &msg)
-    : TException(msg), m_err(0), m_msg(msg) {}
+    : TException(msg), m_err(0), m_msg(TString(msg.begin(), msg.end())) {}
 
 TSystemException::TSystemException(const std::wstring &msg)
     : TException(msg), m_err(0), m_msg(msg) {}
