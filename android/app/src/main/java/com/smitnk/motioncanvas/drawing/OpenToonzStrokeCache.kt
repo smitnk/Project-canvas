@@ -25,14 +25,16 @@ object OpenToonzStrokeCache {
     fun getOrGenerate(stroke: DrawStroke): OpenToonzDrawingEngine.GeneratedStroke? {
         cache[stroke.id]?.let { return it }
         if (!OpenToonzDrawingEngine.isNativeAvailable() || stroke.points.size < 2) return null
-        val generated = OpenToonzDrawingEngine.generateStroke(
-            points = stroke.points,
-            baseSize = stroke.strokeWidth,
-            color = stroke.color,
-            opacity = stroke.alpha,
-            isVector = !stroke.isEraser
-        )
-        cache[stroke.id] = generated
-        return generated
+        return runCatching {
+            OpenToonzDrawingEngine.generateStroke(
+                points = stroke.points,
+                baseSize = stroke.strokeWidth,
+                color = stroke.color,
+                opacity = stroke.alpha,
+                isVector = !stroke.isEraser
+            )
+        }.onSuccess { generated ->
+            cache[stroke.id] = generated
+        }.getOrNull()
     }
 }
