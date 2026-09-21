@@ -60,7 +60,6 @@ if(ANDROID)
     )
     target_link_libraries(mesa_glu PUBLIC GL)
 
-if(ANDROID)
     set(GL4ES_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gl4es)
     set(STATICLIB ON CACHE BOOL "" FORCE)
     set(NOX11 ON CACHE BOOL "" FORCE)
@@ -69,6 +68,7 @@ if(ANDROID)
     add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
     include_directories(${GL4ES_SOURCE_DIR}/include)
 endif()
+
 
 # ==========================================================
 # REAL OPENTOONZ LOW-LEVEL DRAWING SOURCES
