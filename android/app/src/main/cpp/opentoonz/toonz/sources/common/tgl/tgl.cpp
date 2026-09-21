@@ -376,10 +376,6 @@ glScaled(scale.lx*0.07, scale.ly*0.07, 1.0);
 #endif
 //============================================================================
 
-}  // anonymous namespace
-
-//============================================================================
-
 // Public TGL API declared by tgl.h. Keep this definition in the global
 // namespace so it does not conflict with the exported declaration.
 double tglGetPixelSize2() {
