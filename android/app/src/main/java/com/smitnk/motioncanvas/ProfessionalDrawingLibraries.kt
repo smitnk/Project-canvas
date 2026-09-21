@@ -26,6 +26,8 @@ data class ArtboardViewport(
             canvasWidth <= 0f || canvasHeight <= 0f) 1f
         else minOf(workspaceWidth / canvasWidth, workspaceHeight / canvasHeight) * 0.92f
 
+    fun effectiveScale(zoom: Float): Float = fitScale * zoom.coerceAtLeast(0.01f)
+
     fun origin(zoom: Float, pan: androidx.compose.ui.geometry.Offset): androidx.compose.ui.geometry.Offset {
         val s = fitScale * zoom.coerceAtLeast(0.01f)
         return androidx.compose.ui.geometry.Offset(
@@ -119,7 +121,13 @@ fun ProfessionalColorWheelDialog(
     onDismiss: () -> Unit
 ) {
     var selectedArgb by remember(currentColor) { mutableIntStateOf(currentColor.toArgb()) }
-    var value by remember(currentColor) { mutableFloatStateOf(currentColor.value) }
+    var value by remember(currentColor) {
+        mutableFloatStateOf(
+            FloatArray(3).also {
+                android.graphics.Color.colorToHSV(currentColor.toArgb(), it)
+            }[2]
+        )
+    }
     var alpha by remember(currentColor) { mutableFloatStateOf(currentColor.alpha) }
 
     AlertDialog(
