@@ -20,6 +20,7 @@ import kotlin.math.sqrt
 suspend fun PointerInputScope.detectZoomPanOrDraw(
     isPanTool: Boolean,
     zoomPanState: ZoomPanState,
+    coordinateTransform: ((Offset) -> Offset)? = null,
     onDrawStart: (Offset, Float) -> Unit,
     onDraw: (Offset, Float) -> Unit,
     onDrawEnd: () -> Unit
@@ -72,7 +73,8 @@ suspend fun PointerInputScope.detectZoomPanOrDraw(
 
             // Otherwise, we are in a drawing tool (e.g. Brush or Eraser)
             // Initially start single-touch drawing in transformed canvas artwork coordinates
-            val initialCanvasPt = zoomPanState.screenToCanvas(down.position)
+            val initialCanvasPt = coordinateTransform?.invoke(down.position)
+                ?: zoomPanState.screenToCanvas(down.position)
             onDrawStart(initialCanvasPt, stylusPressure(down))
             isDrawing = true
             down.consume()
@@ -115,7 +117,8 @@ suspend fun PointerInputScope.detectZoomPanOrDraw(
                 } else if (!isMultiTouchNavigation && isDrawing) {
                     // Continue drawing with single finger, converting screen touch to canvas coordinates
                     val change = activePointers.first()
-                    val canvasPt = zoomPanState.screenToCanvas(change.position)
+                    val canvasPt = coordinateTransform?.invoke(change.position)
+                        ?: zoomPanState.screenToCanvas(change.position)
                     onDraw(canvasPt, stylusPressure(change))
                     change.consume()
                 } else {
