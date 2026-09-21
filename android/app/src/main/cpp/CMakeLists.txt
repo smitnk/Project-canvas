@@ -37,12 +37,25 @@ add_subdirectory(${GL4ES_SOURCE_DIR} gl4es-build EXCLUDE_FROM_ALL)
 
 # Real Mesa GLU 9.0.3. Compile upstream GLU against GL4ES; no stubs.
 # LZ4 provides the real LZ4 frame API used by OpenToonz tstream.
-# Build it with the Android NDK; do not use a host Linux liblz4.
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
-set(LZ4_BUILD_CLI OFF CACHE BOOL "" FORCE)
-set(LZ4_BUNDLED_MODE ON CACHE BOOL "" FORCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lz4/build/cmake lz4-build EXCLUDE_FROM_ALL)
+# Build the core library sources directly with the Android NDK. This keeps
+# the headless engine independent of LZ4's optional CMake targets/tools.
+set(LZ4_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lz4/lib)
+
+add_library(lz4_static STATIC
+    ${LZ4_DIR}/lz4.c
+    ${LZ4_DIR}/lz4frame.c
+    ${LZ4_DIR}/lz4hc.c
+    ${LZ4_DIR}/xxhash.c
+)
+
+target_include_directories(lz4_static PUBLIC
+    ${LZ4_DIR}
+)
+
+set_target_properties(lz4_static PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    C_VISIBILITY_PRESET default
+)
 
 set(MESA_GLU_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glu)
 file(GLOB_RECURSE MESA_GLU_SOURCES CONFIGURE_DEPENDS
@@ -190,7 +203,7 @@ if(ANDROID)
         ${egl-lib}
         GL
         mesa_glu
-        lz4
+        lz4_static
     )
 endif()
 
@@ -198,6 +211,7 @@ endif()
 # accidentally resolve against an unrelated system copy.
 target_include_directories(
     opentoonz_drawing_engine PRIVATE
+    ${LZ4_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
