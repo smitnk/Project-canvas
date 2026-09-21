@@ -1,22 +1,13 @@
 #pragma once
 #include <mutex>
+
 class QMutex {
 public:
   enum RecursionMode { NonRecursive, Recursive };
-  explicit QMutex(RecursionMode mode = NonRecursive) {}
+  explicit QMutex(RecursionMode = NonRecursive) {}
   void lock() { m_mutex.lock(); }
   void unlock() { m_mutex.unlock(); }
   bool tryLock() { return m_mutex.try_lock(); }
 private:
   std::recursive_mutex m_mutex;
-};
-
-class QMutexLocker {
-public:
-  explicit QMutexLocker(QMutex *m) : m_ptr(m) { if (m_ptr) m_ptr->lock(); }
-  ~QMutexLocker() { if (m_ptr) m_ptr->unlock(); }
-  void relock() { if (m_ptr) m_ptr->lock(); }
-  void unlock() { if (m_ptr) { m_ptr->unlock(); m_ptr = nullptr; } }
-private:
-  QMutex *m_ptr;
 };
