@@ -1764,10 +1764,12 @@ fun EditorScreen(
                         detectZoomPanOrDraw(
                             isPanTool = (tool == ToolType.Pan),
                             zoomPanState = zoomPanState,
-                            onDrawStart = { screenPoint, pressure ->
-                                val canvasPoint = artboardViewport.screenToArtboard(
+                            coordinateTransform = { screenPoint ->
+                                artboardViewport.screenToArtboard(
                                     screenPoint, zoomPanState.zoom, zoomPanState.pan
                                 )
+                            },
+                            onDrawStart = { canvasPoint, pressure ->
                                 if (tool == ToolType.Eyedropper) {
                                     var sampled = project.backgroundColor
                                     val hitDistSq = 36f * 36f
@@ -1836,10 +1838,7 @@ fun EditorScreen(
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
                                 }
                             },
-                            onDraw = { screenPoint, pressure ->
-                                val canvasPoint = artboardViewport.screenToArtboard(
-                                    screenPoint, zoomPanState.zoom, zoomPanState.pan
-                                )
+                            onDraw = { canvasPoint, pressure ->
                                 if (tool == ToolType.Lasso) {
                                     lassoPoints = lassoPoints + canvasPoint
                                 } else if (tool == ToolType.Select) {
