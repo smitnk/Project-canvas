@@ -141,7 +141,9 @@ fun ProfessionalColorWheelDialog(
                             colorChangeListener = { rgb: Int ->
                                 selectedArgb = rgb
                                 val c = Color(rgb)
-                                value = c.value
+                                val hsv = FloatArray(3)
+                                android.graphics.Color.colorToHSV(rgb, hsv)
+                                value = hsv[2]
                                 alpha = c.alpha
                                 onColorChanged(c.copy(alpha = alpha))
                             }
