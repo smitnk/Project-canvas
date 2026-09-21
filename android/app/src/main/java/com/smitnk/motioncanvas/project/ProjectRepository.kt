@@ -19,17 +19,26 @@ object ProjectRepository {
         val file = File(context.filesDir, project.name.sanitize() + EXT)
         val temp = File(context.filesDir, file.name + ".tmp")
         temp.writeText(encode(project).toString(2))
-        if (!temp.renameTo(file)) { file.writeText(temp.readText()); temp.delete() }
+        if (!temp.renameTo(file)) {
+            file.writeText(temp.readText())
+            temp.delete()
+        }
         return file
     }
 
-    fun load(context: Context, name: String): Project? {
+    fun load(context: Context, name: String): Project? = runCatching {
         val file = File(context.filesDir, name.sanitize() + EXT)
-        return if (file.exists()) decode(JSONObject(file.readText())) else null
-    }
+        if (!file.exists()) null else decode(JSONObject(file.readText()))
+    }.getOrNull()
 
     fun list(context: Context): List<String> = context.filesDir.listFiles()
-        ?.filter { it.name.endsWith(EXT) }?.map { it.name.removeSuffix(EXT) }?.sorted() ?: emptyList()
+        ?.filter { it.isFile && it.name.endsWith(EXT) }
+        ?.map { it.name.removeSuffix(EXT) }
+        ?.sorted()
+        ?: emptyList()
+
+    fun loadAll(context: Context): List<Project> =
+        list(context).mapNotNull { load(context, it) }
 
     fun encode(p: Project): JSONObject = JSONObject().apply {
         put("id", p.id); put("name", p.name); put("fps", p.fps)
