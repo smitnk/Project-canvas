@@ -60,6 +60,10 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tvectorimage/tcomputeregions.cpp
     opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
+    opentoonz/toonz/sources/common/tvrender/tpalette.cpp
+    opentoonz/toonz/sources/common/tvrender/tcolorstyles.cpp
+    opentoonz/toonz/sources/common/tvrender/tsimplecolorstyles.cpp
+    opentoonz/toonz/sources/common/tvrender/tofflinegl.cpp
 
     # Actual OpenToonz raster brush sources already present
     opentoonz/toonz/sources/toonzlib/rasterbrush.cpp
