@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdarg>
+#include <cstdio>
 #include "QString"
 
 class QObject {
@@ -6,3 +8,11 @@ public:
   virtual ~QObject() = default;
   static QString tr(const char *text) { return QString(text); }
 };
+
+inline void qWarning(const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  std::vfprintf(stderr, format, args);
+  std::fputc('\n', stderr);
+  va_end(args);
+}
