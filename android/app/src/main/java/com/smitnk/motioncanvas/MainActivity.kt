@@ -352,6 +352,15 @@ fun MotionCanvasApp() {
         )
     }
 
+    // Persist the built-in starter projects on first launch so Home entries are real saved projects.
+    LaunchedEffect(context) {
+        if (ProjectRepository.list(context).isEmpty()) {
+            projects.forEach { starter ->
+                runCatching { ProjectRepository.save(context, starter) }
+            }
+        }
+    }
+
     var activeProject by remember { mutableStateOf<Project?>(null) }
     var workspaceVisibility by remember { mutableStateOf(WorkspaceVisibility()) }
     var advancedWorkspaceState by remember { mutableStateOf(AdvancedWorkspaceState()) }
@@ -628,6 +637,10 @@ fun MotionCanvasApp() {
                         onDeleteFrame = onDeleteFrame,
                         onMoveFrame = onMoveFrame,
                         onBack = {
+                            activeProject?.let { project ->
+                                runCatching { ProjectRepository.save(context, project) }
+                            }
+                            OpenToonzStrokeCache.clear()
                             isPlaying = false
                             screen = ScreenType.HOME
                         },
@@ -661,7 +674,11 @@ fun MotionCanvasApp() {
             }
             ScreenType.TIMELINE -> {
                 activeProject?.let { proj ->
-                    AudioTrackBridge.ensureTracks(activeProject!!.audioTracks, activeProject!!.audioClips)
+                    LaunchedEffect(proj.id) {
+                        runCatching {
+                            AudioTrackBridge.ensureTracks(proj.audioTracks, proj.audioClips)
+                        }
+                    }
                     TimelineScreen(
                         project = proj,
                         currentIndex = currentFrameIndex,
@@ -2203,10 +2220,81 @@ fun EditorScreen(
                                 }
                             }
 
-                            // Pro layer compositor: clipping/blend-aware raster composition.
-                            val composedLayers = renderLayerComposite(project, currentFrame, textureAmount)
-                            drawImage(composedLayers.asImageBitmap())
-                            composedLayers.recycle()
+                            // Use the real OpenToonz-generated vector geometry directly for the
+                            // normal single-layer case. The old compositor allocated one or more full
+                            // canvas bitmaps on every draw pass; that is especially unsafe when opening
+                            // a project because Compose can execute the draw pass repeatedly.
+                            //
+                            // Keep the bitmap compositor only for features that actually require it
+                            // (multiple layers, opacity, clipping, blend modes, or textured strokes).
+                            val needsRasterCompositor =
+                                project.layers.size > 1 ||
+                                project.layers.any { layer ->
+                                    layer.opacity < 0.999f ||
+                                    layer.clipToBelow ||
+                                    blendMode(layer.blendMode) != null
+                                } ||
+                                currentFrame.strokes.any { it.textured }
+
+                            if (needsRasterCompositor) {
+                                val composedLayers = runCatching {
+                                    renderLayerComposite(project, currentFrame, textureAmount)
+                                }.getOrNull()
+
+                                if (composedLayers != null) {
+                                    drawImage(composedLayers.asImageBitmap())
+                                    composedLayers.recycle()
+                                } else {
+                                    // Native/compositor failure must never take down the editor.
+                                    // Render the persisted OpenToonz vector strokes directly.
+                                    currentFrame.strokes.forEach { stroke ->
+                                        if (stroke.points.size > 1) {
+                                            val path = OpenToonzStrokeCache.getOrGenerate(stroke)
+                                                ?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                                ?: Path().apply {
+                                                    moveTo(stroke.points.first().x, stroke.points.first().y)
+                                                    stroke.points.drop(1).forEach { p ->
+                                                        lineTo(p.x, p.y)
+                                                    }
+                                                }
+                                            drawPath(
+                                                path = path,
+                                                color = (if (stroke.isEraser) project.backgroundColor else stroke.color)
+                                                    .copy(alpha = stroke.alpha.coerceIn(0f, 1f)),
+                                                style = Stroke(
+                                                    width = stroke.strokeWidth.coerceAtLeast(1f),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Primary rendering path: actual OpenToonz TStroke geometry.
+                                currentFrame.strokes.forEach { stroke ->
+                                    if (stroke.points.size > 1) {
+                                        val path = OpenToonzStrokeCache.getOrGenerate(stroke)
+                                            ?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                            ?: Path().apply {
+                                                moveTo(stroke.points.first().x, stroke.points.first().y)
+                                                stroke.points.drop(1).forEach { p ->
+                                                    lineTo(p.x, p.y)
+                                                }
+                                            }
+                                        drawPath(
+                                            path = path,
+                                            color = (if (stroke.isEraser) project.backgroundColor else stroke.color)
+                                                .copy(alpha = stroke.alpha.coerceIn(0f, 1f)),
+                                            style = Stroke(
+                                                width = stroke.strokeWidth.coerceAtLeast(1f),
+                                                cap = StrokeCap.Round,
+                                                join = StrokeJoin.Round
+                                            )
+                                        )
+                                    }
+                                }
+                            }
 
                             // Active Frame Strokes selection overlays (content already composited above).
                             history.strokes.filter { it.id in selectedStrokeIds }.forEach { stroke ->
