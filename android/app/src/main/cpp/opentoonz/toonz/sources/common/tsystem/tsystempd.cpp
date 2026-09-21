@@ -75,12 +75,14 @@
 #include <sys/time.h>
 #endif
 
-// Qt headers for Linux
+// Qt headers for desktop Linux only. Android uses the native deleteFile() path.
+#ifndef __ANDROID__
 #include <QDir>
 #include <QFileInfo>
 #include <QStorageInfo>
 #include <QTextStream>
 #include <QUrl>
+#endif
 #endif
 
 #ifdef FREEBSD
