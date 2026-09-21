@@ -11,6 +11,7 @@ add_definitions(
     -DTNZ_LITTLE_ENDIAN=1
 )
 
+# OpenToonz public/common headers
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
@@ -23,23 +24,21 @@ include_directories(
 )
 
 # ==========================================================
-# REAL OPENTOONZ DRAWING CORE
-#
-# Reference architecture: keep the real upstream OpenToonz
-# stroke/vector mathematics, but do NOT pull the desktop
-# application, Qt GUI, TLevel/image-cache stack, or legacy
-# OpenGL renderer into the first Android drawing target.
+# REAL OPENTOONZ LOW-LEVEL DRAWING SOURCES
 # ==========================================================
 
 set(OPENTOONZ_DRAWING_SOURCES
+
+    # Existing ProjectCanvas adapter and platform support
     OpenToonzEngineCore.cpp
     OpenToonzNativeBridge.cpp
+    OpenToonzRuntimeSupport.cpp
 
-    # Real OpenToonz stroke generation
+    # Actual OpenToonz stroke generation
     opentoonz/toonz/sources/toonzlib/strokegenerator.cpp
     opentoonz/toonz/sources/common/tvectorimage/tstroke.cpp
 
-    # Real OpenToonz geometry dependencies
+    # Actual OpenToonz geometry dependencies
     opentoonz/toonz/sources/common/tgeometry/tcurves.cpp
     opentoonz/toonz/sources/common/tgeometry/tcurveutil.cpp
     opentoonz/toonz/sources/common/tgeometry/tgeometry.cpp
@@ -48,23 +47,19 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
     opentoonz/toonz/sources/common/tvrender/tellipticbrush.cpp
 
-    # Real OpenToonz core dependencies
+    # Actual OpenToonz core dependencies
     opentoonz/toonz/sources/common/tcore/tsmartpointer.cpp
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
 
-    # Vector source retained because it is part of the
-    # OpenToonz drawing-core closure used by the reference.
+    # Vector image/style sources already present in v29
     opentoonz/toonz/sources/common/tvectorimage/tvectorimage.cpp
     opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
 
-    # Existing real OpenToonz brush implementations
+    # Actual OpenToonz raster brush sources already present
     opentoonz/toonz/sources/toonzlib/rasterbrush.cpp
     opentoonz/toonz/sources/toonzlib/rasterstrokegenerator.cpp
-
-    # Android platform adaptation already present in Project Canvas
-    opentoonz/toonz/sources/common/tsystem/tsystem_android.cpp
 )
 
 add_library(
@@ -84,9 +79,10 @@ if(ANDROID)
     )
 endif()
 
+# Keep the OpenToonz source visible to the compiler so the build does not
+# accidentally resolve against an unrelated system copy.
 target_include_directories(
     opentoonz_drawing_engine PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tcore
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/common/tgeometry
