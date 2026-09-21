@@ -24,7 +24,10 @@ object OpenToonzStrokeCache {
 
     fun getOrGenerate(stroke: DrawStroke): OpenToonzDrawingEngine.GeneratedStroke? {
         cache[stroke.id]?.let { return it }
-        if (!OpenToonzDrawingEngine.isNativeAvailable() || stroke.points.size < 2) return null
+        // OpenToonz interpolation is used for normal strokes. Keep very short
+        // persisted/tap strokes on the safe display fallback because they do not contain
+        // enough geometry for a stable vector interpolation and must never crash editor entry.
+        if (!OpenToonzDrawingEngine.isNativeAvailable() || stroke.points.size < 4) return null
         return runCatching {
             OpenToonzDrawingEngine.generateStroke(
                 points = stroke.points,
