@@ -1982,7 +1982,7 @@ fun EditorScreen(
                                     }
                                 } else if (tool != ToolType.Eyedropper) {
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && currentDrawingPoints.size >= 2 && OpenToonzDrawingEngine.isNativeAvailable()) {
+                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && currentDrawingPoints.size >= 4 && OpenToonzDrawingEngine.isNativeAvailable()) {
                                         currentOpenToonzPreview = OpenToonzDrawingEngine.generateStroke(
                                             points = currentDrawingPoints.toList(),
                                             baseSize = size,
@@ -2057,7 +2057,7 @@ fun EditorScreen(
                                         textured = texturedBrush && tool == ToolType.Brush
                                     )
                                     if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
-                                        committedPoints.size >= 2 &&
+                                        committedPoints.size >= 4 &&
                                         OpenToonzDrawingEngine.isNativeAvailable()) {
                                         val generated = OpenToonzDrawingEngine.generateStroke(
                                             points = committedPoints,
