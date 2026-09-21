@@ -57,17 +57,33 @@ Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeBeginStroke(
         jfloat x, jfloat y, jfloat pressure,
         jfloat baseSize, jint color, jfloat opacity,
         jboolean isVector, jfloat smoothError) {
-    LOGI("nativeBeginStroke: start=(%.2f, %.2f) pressure=%.3f baseSize=%.2f smoothError=%.2f isVector=%d",
-         x, y, pressure, baseSize, smoothError, isVector);
-    g_engine.beginStroke((double)x, (double)y, (double)pressure, (double)baseSize, (uint32_t)color, (float)opacity, (bool)isVector, (double)smoothError);
+    try {
+        LOGI("nativeBeginStroke: start=(%.2f, %.2f) pressure=%.3f baseSize=%.2f smoothError=%.2f isVector=%d",
+             x, y, pressure, baseSize, smoothError, isVector);
+        g_engine.beginStroke(
+            (double)x, (double)y, (double)pressure,
+            (double)baseSize, (uint32_t)color, (float)opacity,
+            (bool)isVector, (double)smoothError
+        );
+    } catch (const std::exception& e) {
+        LOGE("nativeBeginStroke OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeBeginStroke OpenToonz unknown exception");
+    }
 }
 
 JNIEXPORT void JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeAddPoint(
         JNIEnv *env, jclass clazz,
         jfloat x, jfloat y, jfloat pressure) {
-    LOGI("nativeAddPoint: pt=(%.2f, %.2f) pressure=%.3f", x, y, pressure);
-    g_engine.addPoint((double)x, (double)y, (double)pressure);
+    try {
+        LOGI("nativeAddPoint: pt=(%.2f, %.2f) pressure=%.3f", x, y, pressure);
+        g_engine.addPoint((double)x, (double)y, (double)pressure);
+    } catch (const std::exception& e) {
+        LOGE("nativeAddPoint OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeAddPoint OpenToonz unknown exception");
+    }
 }
 
 JNIEXPORT jfloatArray JNICALL
@@ -122,8 +138,14 @@ JNIEXPORT void JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeSetBrushSettings(
         JNIEnv *env, jclass clazz,
         jfloat size, jfloat opacity, jint color) {
-    g_engine.setBrushSize((double)size);
-    g_engine.setColor((uint32_t)color);
+    try {
+        g_engine.setBrushSize((double)size);
+        g_engine.setColor((uint32_t)color);
+    } catch (const std::exception& e) {
+        LOGE("nativeSetBrushSettings OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeSetBrushSettings OpenToonz unknown exception");
+    }
 }
 
 } // extern "C"
