@@ -44,7 +44,6 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tgeometry/tgeometry.cpp
     opentoonz/toonz/sources/common/tvectorimage/cornerdetector.cpp
     opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
-    opentoonz/toonz/sources/common/tvectorimage/tregion.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
     opentoonz/toonz/sources/common/tvrender/tellipticbrush.cpp
 
@@ -55,14 +54,8 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tcore/tstring.cpp
 
     # Vector image/style sources already present in v29
-    opentoonz/toonz/sources/common/tvectorimage/tvectorimage.cpp
-    opentoonz/toonz/sources/common/tvectorimage/tcomputeregions.cpp
-    opentoonz/toonz/sources/common/tvectorimage/tl2lautocloser.cpp
-    opentoonz/toonz/sources/common/tvrender/tvectorbrushstyle.cpp
 
     # Actual OpenToonz raster brush sources already present
-    opentoonz/toonz/sources/toonzlib/rasterbrush.cpp
-    opentoonz/toonz/sources/toonzlib/rasterstrokegenerator.cpp
 )
 
 add_library(
