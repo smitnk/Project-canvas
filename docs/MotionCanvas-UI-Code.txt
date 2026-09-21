@@ -1,0 +1,133 @@
+MotionCanvas UI source snapshot
+Repository: smitnk/Project-canvas
+Branch: feature/brush-library-color-wheel
+Source: android/app/src/main/java/com/smitnk/motioncanvas/MainActivity.kt
+
+This file is a reference copy of the MotionCanvas UI architecture. The complete source remains in MainActivity.kt.
+
+=== UI SCREENS ===
+enum class ScreenType {
+    HOME, CREATE, SIZE, FPS, EDITOR, SETTINGS, MORE, TIMELINE, LAYERS
+}
+
+=== EDITOR TOOLS ===
+enum class ToolType {
+    Brush, Eraser, Select, Pan, Lasso, Fill, Text, Eyedropper, Arrow, Shape, More
+}
+
+=== WORKSPACE VISIBILITY ===
+data class WorkspaceVisibility(
+    val leftToolbar: Boolean = true,
+    val topBar: Boolean = true,
+    val timeline: Boolean = true,
+    val referenceWidget: Boolean = true,
+    val frameToolsWidget: Boolean = true,
+    val audioWidget: Boolean = true,
+    val advancedWidget: Boolean = true,
+    val proToolsWidget: Boolean = true,
+    val brushPresetsWidget: Boolean = true,
+    val colorWidget: Boolean = true
+)
+
+=== CORE EDITOR DATA ===
+data class DrawPoint(val x: Float, val y: Float, val pressure: Float = 1.0f)
+
+data class DrawStroke(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val points: List<DrawPoint>,
+    val color: Color,
+    val strokeWidth: Float,
+    val alpha: Float = 1.0f,
+    val isEraser: Boolean = false,
+    val layerIndex: Int = 0,
+    val textured: Boolean = false
+)
+
+data class Frame(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val strokes: MutableList<DrawStroke> = mutableListOf(),
+    val texts: MutableList<CanvasText> = mutableListOf(),
+    val redoStrokes: MutableList<DrawStroke> = mutableListOf(),
+    val fills: MutableList<FillMark> = mutableListOf(),
+    var durationFrames: Int = 1,
+    var isKeyframe: Boolean = false,
+    var tag: String = "",
+    var tagColor: Color = Color.Transparent
+)
+
+data class Layer(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String = "Layer 1",
+    val visible: Boolean = true,
+    val opacity: Float = 1.0f,
+    val clipToBelow: Boolean = false,
+    val blendMode: String = "NORMAL"
+)
+
+data class Project(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    var fps: Int = 12,
+    val canvasW: Int = 1280,
+    val canvasH: Int = 720,
+    val frames: MutableList<Frame> = mutableListOf(Frame()),
+    val layers: MutableList<Layer> = mutableListOf(Layer()),
+    val backgroundColor: Color = Color.White,
+    var audioPath: String? = null,
+    val audioClips: MutableList<AudioClip> = mutableListOf(),
+    val audioTracks: MutableList<com.smitnk.motioncanvas.audio.AudioTrack> = mutableListOf()
+)
+
+=== EDITOR UI ===
+The editor is implemented in MotionCanvasApp()/EditorScreen() in MainActivity.kt.
+Layout architecture:
+
+Row {
+    Left vertical toolbar
+    Main drawing workspace / artboard viewport
+}
+
+The workspace contains:
+- centered project artboard
+- project background color
+- pink artboard border
+- grid
+- onion skin
+- reference image support
+- text/fill/selection overlays
+- temporary brush preview
+- bottom timeline
+
+Top editor controls include zoom out, zoom value/reset, zoom in, onion skin, undo, redo, timeline, layers, reference, frame tools, audio, advanced tools, pro tools, brush library, color wheel, more, and settings.
+
+Left toolbar includes Brush, Brush presets, Eraser, Select, Lasso, Eyedropper, Pan, Fill, Text, Arrow, Shapes, Undo, Redo, color indicator, and recent colors.
+
+Bottom timeline includes frame thumbnails, current-frame selection, FPS, playback, loop mode, add/insert/duplicate/copy/paste/delete/move frame operations, and frame holds.
+
+=== BRUSH LIBRARY ===
+Professional brush presets represented by BrushPresetStore/ProfessionalDrawingLibraries include Pencil, Pen, Calligraphy, Airbrush, Marker, Ink G-Pen, Chalk, and Soft Eraser.
+
+=== COLOR UI ===
+ProfessionalColorWheelDialog provides color wheel, brightness, opacity, eyedropper, current color, recent colors, and custom palette.
+Color-wheel dependency: com.github.antonpopoff:colorwheel:1.1.13.
+
+=== TIMELINE / ANIMATION UI ===
+Timeline supports frame selection, play, loop, FPS, blank frame, insert before/after, duplicate, copy, paste, delete, move, frame holds, onion skin, motion trails, and audio waveform/tools.
+
+=== LAYERS UI ===
+LayersScreen supports layer selection, add layer, visibility, opacity, clipping, and blend modes NORMAL/MULTIPLY/SCREEN/OVERLAY/ADD.
+
+=== ADVANCED / PRO UI ===
+AdvancedAnimationToolsDialog provides motion trails, multi-frame operations, sprite-sheet export, MP4 export, and audio waveform display.
+ProToolsDialog provides rotoscoping import, chroma-key tolerance/removal, smudge, and frame operations.
+AudioToolsDialog provides recording, preview, trim, fade-in/fade-out and waveform controls.
+
+=== IMPORTANT ENGINE SEPARATION ===
+The UI/display surface is Jetpack Compose. The authoritative normal vector stroke engine is the actual OpenToonz C++ StrokeGenerator/TStroke pipeline. UI code must not replace OpenToonz with a custom stroke engine.
+
+=== AUTHORITATIVE SOURCE ===
+For the complete exact UI implementation, use:
+android/app/src/main/java/com/smitnk/motioncanvas/MainActivity.kt
+on branch feature/brush-library-color-wheel.
+
+This txt is an architecture/reference copy rather than a shortened replacement for the complete 3,700+ line source file.
