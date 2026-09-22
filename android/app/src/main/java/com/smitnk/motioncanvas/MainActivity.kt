@@ -2001,7 +2001,15 @@ fun EditorScreen(
                                     }
                                 } else if (tool != ToolType.Eyedropper) {
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if (nativeStrokeActive) OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
+                                    if (nativeStrokeActive) {
+                                        runCatching {
+                                            OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
+                                        }.onFailure {
+                                            // Keep the visible software preview alive if a native session fails.
+                                            // OpenToonz remains the authoritative final generator when its session is healthy.
+                                            nativeStrokeActive = false
+                                        }
+                                    }
                                 }
                             },
                             onDrawEnd = {
@@ -2076,7 +2084,13 @@ fun EditorScreen(
                                                 baseSize = size
                                             )
                                         }.onSuccess { generated ->
-                                            if (generated.segments.isNotEmpty()) OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                            // Cache the real OpenToonz TStroke geometry for final rendering.
+                                            if (generated.segments.isNotEmpty()) {
+                                                OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                            }
+                                        }.onFailure {
+                                            // The stroke is still committed; getOrGenerate() can safely
+                                            // use the software fallback if native generation failed.
                                         }
                                         nativeStrokeActive = false
                                     }
