@@ -11,7 +11,6 @@ add_definitions(
     -DTNZ_LITTLE_ENDIAN=1
 )
 
-# OpenToonz public/common headers
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/qt_shim
@@ -24,14 +23,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/toonzlib
 )
 
-# ==========================================================
-# Android OpenGL compatibility required by the real OpenToonz StrokeGenerator.
-# StrokeGenerator contains legacy drawFragments()/drawFilledStroke() methods
-# that reference OpenGL symbols even though Project Canvas renders extracted
-# TStroke geometry on the Android side.
-# GL4ES provides those legacy symbols through GLES2 on Android; it does not
-# bring the OpenToonz desktop application or desktop UI into the engine.
-# ==========================================================
 if(ANDROID)
     set(MESA_GLU_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glu)
     file(GLOB_RECURSE MESA_GLU_SOURCES CONFIGURE_DEPENDS
@@ -69,23 +60,12 @@ if(ANDROID)
     include_directories(${GL4ES_SOURCE_DIR}/include)
 endif()
 
-
-# ==========================================================
-# REAL OPENTOONZ LOW-LEVEL DRAWING SOURCES
-# ==========================================================
-
 set(OPENTOONZ_DRAWING_SOURCES
-
-    # Existing ProjectCanvas adapter and platform support
     OpenToonzEngineCore.cpp
     OpenToonzNativeBridge.cpp
     OpenToonzRuntimeSupport.cpp
-
-    # Actual OpenToonz stroke generation
     opentoonz/toonz/sources/toonzlib/strokegenerator.cpp
     opentoonz/toonz/sources/common/tvectorimage/tstroke.cpp
-
-    # Actual OpenToonz geometry dependencies
     opentoonz/toonz/sources/common/tgeometry/tcurves.cpp
     opentoonz/toonz/sources/common/tgeometry/tcurveutil.cpp
     opentoonz/toonz/sources/common/tgeometry/tgeometry.cpp
@@ -93,18 +73,12 @@ set(OPENTOONZ_DRAWING_SOURCES
     opentoonz/toonz/sources/common/tvectorimage/tstrokeoutline.cpp
     opentoonz/toonz/sources/common/tvrender/tstrokeutil.cpp
     opentoonz/toonz/sources/common/tvrender/tellipticbrush.cpp
-
-    # Actual OpenToonz core dependencies
     opentoonz/toonz/sources/common/tcore/tsmartpointer.cpp
     opentoonz/toonz/sources/common/tcore/texception.cpp
     opentoonz/toonz/sources/common/tcore/tmathutil.cpp
     opentoonz/toonz/sources/common/tcore/tstring.cpp
     opentoonz/toonz/sources/common/tsystem/tfilepath.cpp
     opentoonz/toonz/sources/common/tsystem/tfiletype.cpp
-
-    # Vector image/style sources already present in v29
-
-    # Actual OpenToonz raster brush sources already present
 )
 
 add_library(
@@ -114,9 +88,15 @@ add_library(
 )
 
 if(ANDROID)
+    # Android 15+/16KB page-size compatibility.
+    # Keep OpenToonz/GL4ES as the real native engine; this only controls ELF
+    # LOAD segment alignment in the final shared library.
+    target_link_options(opentoonz_drawing_engine PRIVATE
+        "-Wl,-z,max-page-size=16384"
+    )
+
     find_library(log-lib log)
     find_library(jnigraphics-lib jnigraphics)
-
     find_library(gles2-lib GLESv2)
     find_library(egl-lib EGL)
 
@@ -131,8 +111,6 @@ if(ANDROID)
     )
 endif()
 
-# Keep the OpenToonz source visible to the compiler so the build does not
-# accidentally resolve against an unrelated system copy.
 target_include_directories(
     opentoonz_drawing_engine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/opentoonz/toonz/sources/include
