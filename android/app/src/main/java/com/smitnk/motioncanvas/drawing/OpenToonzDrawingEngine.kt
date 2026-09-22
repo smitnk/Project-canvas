@@ -158,7 +158,7 @@ object OpenToonzDrawingEngine {
         smoothError: Float = 4f
     ): GeneratedStroke {
         check(isNativeAvailable()) { "OpenToonz native drawing engine is unavailable" }
-        require(points.size >= 2) { "At least two points are required" }
+        require(points.size >= 4) { "At least four points are required for OpenToonz interpolation" }
 
         beginStroke(
             start = points.first().let { Offset(it.x, it.y) },

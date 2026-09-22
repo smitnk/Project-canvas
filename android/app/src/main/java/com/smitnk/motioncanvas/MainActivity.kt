@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.smitnk.motioncanvas
 
 import android.os.Bundle
@@ -47,6 +49,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.sp
 import com.smitnk.motioncanvas.ui.theme.*
 import com.smitnk.motioncanvas.brush.CustomBrushPreset
@@ -243,10 +247,29 @@ private fun renderLayerComposite(project: Project, frame: Frame, textureAmount: 
             paint.strokeWidth = s.strokeWidth.coerceAtLeast(1f)
             paint.strokeCap = AndroidPaint.Cap.ROUND
             paint.strokeJoin = AndroidPaint.Join.ROUND
-            val path = android.graphics.Path()
-            path.moveTo(s.points.first().x, s.points.first().y)
-            s.points.drop(1).forEach { path.lineTo(it.x, it.y) }
-            lc.drawPath(path, paint)
+            // Render committed strokes from the real OpenToonz TStroke geometry.
+            // OpenToonzStrokeCache regenerates the native vector geometry from the
+            // persisted input points when needed, while Android Canvas remains only
+            // the final display surface.
+            val openToonzStroke = OpenToonzStrokeCache.getOrGenerate(s)
+            if (openToonzStroke != null && openToonzStroke.segments.isNotEmpty()) {
+                val path = android.graphics.Path()
+                val first = openToonzStroke.segments.first()
+                path.moveTo(first.p0.x, first.p0.y)
+                openToonzStroke.segments.forEach { segment ->
+                    path.quadTo(
+                        segment.p1.x, segment.p1.y,
+                        segment.p2.x, segment.p2.y
+                    )
+                }
+                lc.drawPath(path, paint)
+            } else {
+                // Safe fallback only if the native OpenToonz engine is unavailable.
+                val path = android.graphics.Path()
+                path.moveTo(s.points.first().x, s.points.first().y)
+                s.points.drop(1).forEach { path.lineTo(it.x, it.y) }
+                lc.drawPath(path, paint)
+            }
             if (s.textured) {
                 AdvancedBrushEngine.draw(
                     canvas = lc,
@@ -282,40 +305,60 @@ private fun renderLayerComposite(project: Project, frame: Frame, textureAmount: 
 @Composable
 fun MotionCanvasApp() {
     var screen by remember { mutableStateOf(ScreenType.HOME) }
-    var projects by remember {
+    val context = LocalContext.current
+    var projects by remember(context) {
         mutableStateOf(
-            listOf(
-                Project(
-                    name = "My Animation",
-                    fps = 12,
-                    frames = mutableListOf(
-                        Frame(
-                            strokes = mutableListOf(
-                                DrawStroke(
-                                    points = listOf(DrawPoint(100f, 150f), DrawPoint(150f, 100f), DrawPoint(200f, 150f)),
-                                    color = Color.Black,
-                                    strokeWidth = 10f
+            ProjectRepository.loadAll(context).ifEmpty {
+                listOf(
+                    Project(
+                        name = "My Animation",
+                        fps = 12,
+                        frames = mutableListOf(
+                            Frame(
+                                strokes = mutableListOf(
+                                    DrawStroke(
+                                        points = listOf(
+                                            DrawPoint(100f, 150f),
+                                            DrawPoint(150f, 100f),
+                                            DrawPoint(200f, 150f)
+                                        ),
+                                        color = Color.Black,
+                                        strokeWidth = 10f
+                                    )
                                 )
-                            )
-                        ),
-                        Frame(
-                            strokes = mutableListOf(
-                                DrawStroke(
-                                    points = listOf(DrawPoint(120f, 160f), DrawPoint(170f, 110f), DrawPoint(220f, 160f)),
-                                    color = Color.Black,
-                                    strokeWidth = 10f
+                            ),
+                            Frame(
+                                strokes = mutableListOf(
+                                    DrawStroke(
+                                        points = listOf(
+                                            DrawPoint(120f, 160f),
+                                            DrawPoint(170f, 110f),
+                                            DrawPoint(220f, 160f)
+                                        ),
+                                        color = Color.Black,
+                                        strokeWidth = 10f
+                                    )
                                 )
                             )
                         )
+                    ),
+                    Project(
+                        name = "Walk Cycle",
+                        fps = 12,
+                        frames = mutableListOf(Frame(), Frame(), Frame())
                     )
-                ),
-                Project(
-                    name = "Walk Cycle",
-                    fps = 12,
-                    frames = mutableListOf(Frame(), Frame(), Frame())
                 )
-            )
+            }
         )
+    }
+
+    // Persist the built-in starter projects on first launch so Home entries are real saved projects.
+    LaunchedEffect(context) {
+        if (ProjectRepository.list(context).isEmpty()) {
+            projects.forEach { starter ->
+                runCatching { ProjectRepository.save(context, starter) }
+            }
+        }
     }
 
     var activeProject by remember { mutableStateOf<Project?>(null) }
@@ -374,7 +417,6 @@ fun MotionCanvasApp() {
     var timelineLoopMode by remember { mutableStateOf(com.smitnk.motioncanvas.animation.TimelineLoopMode.LOOP) }
     var copiedFrame by remember { mutableStateOf<Frame?>(null) }
     val brushPresetStore = remember { BrushPresetStore() }
-    val context = LocalContext.current
     val sharedAudioClock = remember { SharedAudioVideoClock(context) }
     DisposableEffect(Unit) { onDispose { sharedAudioClock.release() } }
     val autosaveStore = remember { com.smitnk.motioncanvas.project.AutosaveStore(context) }
@@ -383,19 +425,18 @@ fun MotionCanvasApp() {
     LaunchedEffect(activeProject) {
         while (activeProject != null) {
             delay(3000)
-            activeProject?.let { autosaveStore.save(it.id, ProjectRepository.encode(it).toString()) }
+            activeProject?.let { project ->
+                runCatching {
+                    val json = ProjectRepository.encode(project).toString()
+                    autosaveStore.save(project.id, json)
+                    ProjectRepository.save(context, project)
+                }
+            }
         }
     }
 
-    // Shared audio/video clock: audio is prepared from the same frame timeline used by playback.
-    LaunchedEffect(activeProject) {
-        activeProject?.let { project ->
-            AudioTrackBridge.ensureTracks(project.audioTracks, project.audioClips)
-            sharedAudioClock.prepare(project.audioTracks, project.fps)
-            sharedAudioClock.bindClips(project.audioTracks)
-        }
-    }
-
+    // Audio is initialized lazily by playback. Opening an animation must never
+    // construct MediaPlayer instances on the editor-entry path.
     LaunchedEffect(isPlaying, activeProject, activeProject?.fps, timelineLoopMode) {
         val project = activeProject ?: return@LaunchedEffect
         if (!isPlaying || project.frames.isEmpty()) return@LaunchedEffect
@@ -509,8 +550,12 @@ fun MotionCanvasApp() {
                 HomeScreen(
                     projects = projects,
                     onOpenProject = { proj ->
-                        activeProject = proj
+                        val loaded = ProjectRepository.load(context, proj.name) ?: proj
+                        activeProject = loaded
                         currentFrameIndex = 0
+                        selectedLayerIndex = 0
+                        isPlaying = false
+                        OpenToonzStrokeCache.clear()
                         screen = ScreenType.EDITOR
                     },
                     onCreateNew = {
@@ -522,16 +567,28 @@ fun MotionCanvasApp() {
                 CreateProjectScreen(
                     onBack = { screen = ScreenType.HOME },
                     onCreate = { name, fps, w, h, bg ->
+                        val requestedName = name.trim().ifEmpty { "Untitled" }
+                        var uniqueName = requestedName
+                        var suffix = 2
+                        while (projects.any { it.name.equals(uniqueName, ignoreCase = true) }) {
+                            uniqueName = "$requestedName $suffix"
+                            suffix++
+                        }
+
                         val newProj = Project(
-                            name = name.ifEmpty { "Untitled" },
+                            name = uniqueName,
                             fps = fps,
                             canvasW = w,
                             canvasH = h,
                             backgroundColor = bg
                         )
                         projects = projects + newProj
+                        runCatching { ProjectRepository.save(context, newProj) }
                         activeProject = newProj
                         currentFrameIndex = 0
+                        selectedLayerIndex = 0
+                        isPlaying = false
+                        OpenToonzStrokeCache.clear()
                         screen = ScreenType.EDITOR
                     },
                     onSelectSize = { screen = ScreenType.SIZE },
@@ -588,6 +645,10 @@ fun MotionCanvasApp() {
                         onDeleteFrame = onDeleteFrame,
                         onMoveFrame = onMoveFrame,
                         onBack = {
+                            activeProject?.let { project ->
+                                runCatching { ProjectRepository.save(context, project) }
+                            }
+                            OpenToonzStrokeCache.clear()
                             isPlaying = false
                             screen = ScreenType.HOME
                         },
@@ -621,7 +682,11 @@ fun MotionCanvasApp() {
             }
             ScreenType.TIMELINE -> {
                 activeProject?.let { proj ->
-                    AudioTrackBridge.ensureTracks(activeProject!!.audioTracks, activeProject!!.audioClips)
+                    LaunchedEffect(proj.id) {
+                        runCatching {
+                            AudioTrackBridge.ensureTracks(proj.audioTracks, proj.audioClips)
+                        }
+                    }
                     TimelineScreen(
                         project = proj,
                         currentIndex = currentFrameIndex,
@@ -1144,6 +1209,7 @@ fun EditorScreen(
     onAdvancedWorkspaceStateChange: (AdvancedWorkspaceState) -> Unit = {},
     onOpenMore: () -> Unit = {}
 ) {
+    if (project.frames.isEmpty()) return
     val currentFrame = project.frames.getOrNull(frameIndex) ?: project.frames.first()
     // Layer selection is not yet exposed by EditorScreen; keep drawing on the base layer until the layer UI supplies an index.
     val selectedLayerIndex = 0
@@ -1179,7 +1245,9 @@ fun EditorScreen(
         if (granted && !isRecording) { recorder.start(); isRecording = true }
     }
     LaunchedEffect(project.audioPath) {
-        waveform = project.audioPath?.let { AudioWaveformAnalyzer.analyze(it, 160) } ?: emptyList()
+        waveform = project.audioPath?.let { path ->
+            runCatching { AudioWaveformAnalyzer.analyze(path, 160) }.getOrDefault(emptyList())
+        } ?: emptyList()
     }
     LaunchedEffect(frameIndex, rotoscopeFrames) {
         if (rotoscopeFrames.isNotEmpty()) referenceBitmap = rotoscopeFrames.getOrNull(frameIndex)?.let { it } ?: referenceBitmap
@@ -1284,16 +1352,11 @@ fun EditorScreen(
     }
 
     if (showColorPicker) {
-        AdvancedColorPickerDialog(
+        ProfessionalColorWheelDialog(
             currentColor = color,
-            recentColors = recentColors,
-            customPalette = customPalette,
-            onColorChanged = { newColor ->
-                onColorChange(newColor)
-            },
-            onSaveToPalette = onSaveToPalette,
-            onRemoveFromPalette = onRemoveFromPalette,
+            onColorChanged = onColorChange,
             onEyedropperClick = {
+                showColorPicker = false
                 onToolChange(ToolType.Eyedropper)
             },
             onDismiss = { showColorPicker = false }
@@ -1301,50 +1364,19 @@ fun EditorScreen(
     }
 
     if (showBrushPresets) {
-        AlertDialog(
-            onDismissRequest = { showBrushPresets = false },
-            title = { Text("Brush Presets") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = presetName,
-                        onValueChange = { presetName = it },
-                        label = { Text("Preset name") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Text("Current: ${size.toInt()} px", color = TextSecondary)
-                    Text("Saved presets", fontWeight = FontWeight.SemiBold)
-                    if (brushPresetStore.presets.isEmpty()) Text("No presets yet", color = TextSecondary)
-                    brushPresetStore.presets.forEach { preset ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                onColorChange(preset.color)
-                                onSizeChange(preset.width)
-                                showBrushPresets = false
-                            }.padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(Modifier.size(24.dp).clip(CircleShape).background(preset.color))
-                            Spacer(Modifier.width(10.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(preset.name)
-                                Text("${preset.width.toInt()} px", color = TextSecondary, fontSize = 12.sp)
-                            }
-                            IconButton(onClick = { brushPresetStore.remove(preset.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete preset")
-                            }
-                        }
-                    }
+        ProfessionalBrushLibraryDialog(
+            onApply = { preset ->
+                onColorChange(color)
+                onSizeChange(preset.size)
+                onTexturedBrushChange(preset.textured)
+                if (preset.name.contains("Eraser", ignoreCase = true)) {
+                    onToolChange(ToolType.Eraser)
+                } else {
+                    onToolChange(ToolType.Brush)
                 }
+                showBrushPresets = false
             },
-            confirmButton = {
-                TextButton(enabled = presetName.isNotBlank(), onClick = {
-                    brushPresetStore.add(CustomBrushPreset(name = presetName.trim(), color = color, width = size, alpha = color.alpha))
-                    presetName = ""
-                }) { Text("Save current") }
-            },
-            dismissButton = { TextButton(onClick = { showBrushPresets = false }) { Text("Close") } }
+            onDismiss = { showBrushPresets = false }
         )
     }
 
@@ -1421,15 +1453,21 @@ fun EditorScreen(
                     }
                 },
                 actions = {
-                    // Zoom In, Zoom Out, and Reset Controls
-                    IconButton(onClick = { zoomPanState.zoomOut() }) {
-                        Icon(Icons.Default.ZoomOut, contentDescription = "Zoom Out", tint = White)
-                    }
-                    TextButton(onClick = { zoomPanState.reset() }) {
-                        Text("${zoomPanState.zoomPercent}%", color = if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) PinkAccent else White, fontSize = 12.sp)
-                    }
-                    IconButton(onClick = { zoomPanState.zoomIn() }) {
-                        Icon(Icons.Default.ZoomIn, contentDescription = "Zoom In", tint = White)
+                    // Compact, non-overlapping zoom controls.
+                    Row(
+                        modifier = Modifier.widthIn(min = 118.dp, max = 128.dp),
+                        horizontalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { zoomPanState.zoomOut() }, modifier = Modifier.size(38.dp)) {
+                            Icon(Icons.Default.ZoomOut, contentDescription = "Zoom Out", tint = White)
+                        }
+                        TextButton(onClick = { zoomPanState.reset() }, modifier = Modifier.width(42.dp).height(40.dp), contentPadding = PaddingValues(0.dp)) {
+                            Text("${zoomPanState.zoomPercent}%", color = if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) PinkAccent else White, fontSize = 12.sp, maxLines = 1)
+                        }
+                        IconButton(onClick = { zoomPanState.zoomIn() }, modifier = Modifier.size(38.dp)) {
+                            Icon(Icons.Default.ZoomIn, contentDescription = "Zoom In", tint = White)
+                        }
                     }
                     if (zoomPanState.zoom != 1f || zoomPanState.pan != Offset.Zero) {
                         IconButton(onClick = { zoomPanState.reset() }) {
@@ -1511,6 +1549,14 @@ fun EditorScreen(
                         Icon(Icons.Default.AutoAwesome, contentDescription = "Pro tools", tint = PinkAccent)
                     }
                     }
+                    }
+
+                    // Always-visible brush library and color-wheel entry points.
+                    IconButton(onClick = { showBrushPresets = true }, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Brush, contentDescription = "Professional Brush Library", tint = PinkAccent)
+                    }
+                    IconButton(onClick = { showColorPicker = true }, modifier = Modifier.size(44.dp)) {
+                        Box(Modifier.size(28.dp).clip(CircleShape).background(color).border(2.dp, White, CircleShape))
                     }
 
                     IconButton(onClick = onOpenMore) {
@@ -1735,6 +1781,26 @@ fun EditorScreen(
                 }
             }
 
+            }
+
+            // Explicit project artboard viewport. The workspace is not the drawing canvas.
+            var artboardWorkspaceSize by remember { mutableStateOf(IntSize.Zero) }
+            val artboardViewport = remember(
+                artboardWorkspaceSize,
+                project.canvasW,
+                project.canvasH
+            ) {
+                ArtboardViewport(
+                    workspaceWidth = artboardWorkspaceSize.width.toFloat(),
+                    workspaceHeight = artboardWorkspaceSize.height.toFloat(),
+                    canvasWidth = project.canvasW.toFloat(),
+                    canvasHeight = project.canvasH.toFloat()
+                )
+            }
+
+            // One native session per pointer stroke. Always closed on UP/CANCEL.
+            var nativeStrokeActive by remember { mutableStateOf(false) }
+
             // Interactive Canvas with Zoom, Pan, and Gesture Support
             Box(
                 modifier = Modifier
@@ -1742,7 +1808,8 @@ fun EditorScreen(
                     .fillMaxHeight()
                     .padding(8.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(project.backgroundColor)
+                    .background(Color(0xFF202124))
+                    .onSizeChanged { artboardWorkspaceSize = it }
                     .pointerInput(referenceEditMode, referenceBitmap, zoomPanState.zoom) {
                         if (referenceEditMode && referenceBitmap != null) {
                             detectTransformGestures { _, panChange, zoomChange, rotationChange ->
@@ -1757,10 +1824,15 @@ fun EditorScreen(
                             }
                         }
                     }
-                    .pointerInput(tool, color, size, frameIndex, zoomPanState.zoom, zoomPanState.pan, canvasRevision) {
+                    .pointerInput(tool, color, size, frameIndex, zoomPanState.zoom, zoomPanState.pan, canvasRevision, artboardWorkspaceSize) {
                         detectZoomPanOrDraw(
                             isPanTool = (tool == ToolType.Pan),
                             zoomPanState = zoomPanState,
+                            coordinateTransform = { screenPoint ->
+                                artboardViewport.screenToArtboard(
+                                    screenPoint, zoomPanState.zoom, zoomPanState.pan
+                                )
+                            },
                             onDrawStart = { canvasPoint, pressure ->
                                 if (tool == ToolType.Eyedropper) {
                                     var sampled = project.backgroundColor
@@ -1828,6 +1900,20 @@ fun EditorScreen(
                                     currentDrawingPoints.clear()
                                     currentOpenToonzPreview = null
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
+                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
+                                        OpenToonzDrawingEngine.isNativeAvailable()) {
+                                        runCatching {
+                                            OpenToonzDrawingEngine.beginStroke(
+                                                start = canvasPoint,
+                                                pressure = pressure,
+                                                baseSize = size,
+                                                color = if (tool == ToolType.Eraser) project.backgroundColor else color,
+                                                opacity = color.alpha,
+                                                isVector = tool != ToolType.Eraser
+                                            )
+                                            nativeStrokeActive = true
+                                        }.onFailure { nativeStrokeActive = false }
+                                    }
                                 }
                             },
                             onDraw = { canvasPoint, pressure ->
@@ -1915,14 +2001,14 @@ fun EditorScreen(
                                     }
                                 } else if (tool != ToolType.Eyedropper) {
                                     currentDrawingPoints.add(DrawPoint(canvasPoint.x, canvasPoint.y, pressure))
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) && currentDrawingPoints.size >= 2 && OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        currentOpenToonzPreview = OpenToonzDrawingEngine.generateStroke(
-                                            points = currentDrawingPoints.toList(),
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
+                                    if (nativeStrokeActive) {
+                                        runCatching {
+                                            OpenToonzDrawingEngine.addPoint(canvasPoint, pressure)
+                                        }.onFailure {
+                                            // Keep the visible software preview alive if a native session fails.
+                                            // OpenToonz remains the authoritative final generator when its session is healthy.
+                                            nativeStrokeActive = false
+                                        }
                                     }
                                 }
                             },
@@ -1989,17 +2075,24 @@ fun EditorScreen(
                                         layerIndex = selectedLayerIndex,
                                         textured = texturedBrush && tool == ToolType.Brush
                                     )
-                                    if ((tool == ToolType.Brush || tool == ToolType.Eraser) &&
-                                        committedPoints.size >= 2 &&
-                                        OpenToonzDrawingEngine.isNativeAvailable()) {
-                                        val generated = OpenToonzDrawingEngine.generateStroke(
-                                            points = committedPoints,
-                                            baseSize = size,
-                                            color = if (tool == ToolType.Eraser) project.backgroundColor else color,
-                                            opacity = color.alpha,
-                                            isVector = tool != ToolType.Eraser
-                                        )
-                                        OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                    if (nativeStrokeActive) {
+                                        runCatching {
+                                            OpenToonzDrawingEngine.endStroke(
+                                                points = committedPoints.map {
+                                                    OpenToonzDrawingEngine.StrokePoint(Offset(it.x, it.y), it.pressure)
+                                                },
+                                                baseSize = size
+                                            )
+                                        }.onSuccess { generated ->
+                                            // Cache the real OpenToonz TStroke geometry for final rendering.
+                                            if (generated.segments.isNotEmpty()) {
+                                                OpenToonzStrokeCache.put(committedStroke.id, generated)
+                                            }
+                                        }.onFailure {
+                                            // The stroke is still committed; getOrGenerate() can safely
+                                            // use the software fallback if native generation failed.
+                                        }
+                                        nativeStrokeActive = false
                                     }
                                     history.addStroke(committedStroke)
                                     currentDrawingPoints.clear()
@@ -2011,25 +2104,53 @@ fun EditorScreen(
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val canvasSize = drawContext.size
-                    // Apply zoom and pan transformation to canvas rendering
-                    translate(left = zoomPanState.pan.x, top = zoomPanState.pan.y) {
-                        scale(scale = zoomPanState.zoom, pivot = Offset.Zero) {
+                    val canvasViewport = ArtboardViewport(
+                        workspaceWidth = canvasSize.width,
+                        workspaceHeight = canvasSize.height,
+                        canvasWidth = project.canvasW.toFloat(),
+                        canvasHeight = project.canvasH.toFloat()
+                    )
+                    val artboardOrigin = canvasViewport.origin(zoomPanState.zoom, zoomPanState.pan)
+                    val artboardScale = canvasViewport.effectiveScale(zoomPanState.zoom)
+
+                    // Explicit centered project artboard. Everything inside uses project coordinates.
+                    translate(left = artboardOrigin.x, top = artboardOrigin.y) {
+                        // Always draw the visible drawing surface before any compositor output.
+                        drawRect(
+                            color = project.backgroundColor,
+                            topLeft = Offset.Zero,
+                            size = androidx.compose.ui.geometry.Size(project.canvasW.toFloat(), project.canvasH.toFloat())
+                        )
+                        drawRect(
+                            color = PinkAccent.copy(alpha = 0.65f),
+                            topLeft = Offset.Zero,
+                            size = androidx.compose.ui.geometry.Size(project.canvasW.toFloat(), project.canvasH.toFloat()),
+                            style = Stroke(width = 2f / artboardScale.coerceAtLeast(0.01f))
+                        )
+                        scale(scale = artboardScale, pivot = Offset.Zero) {
+                            drawRect(
+                                color = project.backgroundColor,
+                                topLeft = Offset.Zero,
+                                size = androidx.compose.ui.geometry.Size(
+                                    project.canvasW.toFloat(), project.canvasH.toFloat()
+                                )
+                            )
                             // Grid
                             if (grid) {
                                 val step = 40.dp.toPx()
-                                for (x in 0 until (canvasSize.width / step).toInt()) {
+                                for (x in 0 until (project.canvasW / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(x * step, 0f),
-                                        end = Offset(x * step, canvasSize.height),
+                                        end = Offset(x * step, project.canvasH.toFloat()),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
-                                for (y in 0 until (canvasSize.height / step).toInt()) {
+                                for (y in 0 until (project.canvasH / step).toInt()) {
                                     drawLine(
                                         color = Color.LightGray.copy(alpha = 0.4f),
                                         start = Offset(0f, y * step),
-                                        end = Offset(canvasSize.width, y * step),
+                                        end = Offset(project.canvasW.toFloat(), y * step),
                                         strokeWidth = 1f / zoomPanState.zoom
                                     )
                                 }
@@ -2112,7 +2233,7 @@ fun EditorScreen(
                                 val bc = AndroidCanvas(fillBitmap)
                                 bc.drawColor(project.backgroundColor.toArgb())
                                 val bp = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply { style = AndroidPaint.Style.STROKE; strokeCap = AndroidPaint.Cap.ROUND; strokeJoin = AndroidPaint.Join.ROUND }
-                                currentFrame.strokes.forEach { s ->
+                                history.strokes.forEach { s ->
                                     bp.color = if (s.isEraser) project.backgroundColor.toArgb() else s.color.copy(alpha = s.alpha).toArgb(); bp.strokeWidth = s.strokeWidth
                                     val path = android.graphics.Path(); s.points.firstOrNull()?.let { path.moveTo(it.x,it.y) }; s.points.drop(1).forEach { path.lineTo(it.x,it.y) }; bc.drawPath(path,bp)
                                 }
@@ -2136,10 +2257,81 @@ fun EditorScreen(
                                 }
                             }
 
-                            // Pro layer compositor: clipping/blend-aware raster composition.
-                            val composedLayers = renderLayerComposite(project, currentFrame, textureAmount)
-                            drawImage(composedLayers.asImageBitmap())
-                            composedLayers.recycle()
+                            // Use the real OpenToonz-generated vector geometry directly for the
+                            // normal single-layer case. The old compositor allocated one or more full
+                            // canvas bitmaps on every draw pass; that is especially unsafe when opening
+                            // a project because Compose can execute the draw pass repeatedly.
+                            //
+                            // Keep the bitmap compositor only for features that actually require it
+                            // (multiple layers, opacity, clipping, blend modes, or textured strokes).
+                            val needsRasterCompositor =
+                                project.layers.size > 1 ||
+                                project.layers.any { layer ->
+                                    layer.opacity < 0.999f ||
+                                    layer.clipToBelow ||
+                                    blendMode(layer.blendMode) != null
+                                } ||
+                                currentFrame.strokes.any { it.textured }
+
+                            if (needsRasterCompositor) {
+                                val composedLayers = runCatching {
+                                    renderLayerComposite(project, currentFrame, textureAmount)
+                                }.getOrNull()
+
+                                if (composedLayers != null) {
+                                    drawImage(composedLayers.asImageBitmap())
+                                    composedLayers.recycle()
+                                } else {
+                                    // Native/compositor failure must never take down the editor.
+                                    // Render the persisted OpenToonz vector strokes directly.
+                                    history.strokes.forEach { stroke ->
+                                        if (stroke.points.size > 1) {
+                                            val path = OpenToonzStrokeCache.getOrGenerate(stroke)
+                                                ?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                                ?: Path().apply {
+                                                    moveTo(stroke.points.first().x, stroke.points.first().y)
+                                                    stroke.points.drop(1).forEach { p ->
+                                                        lineTo(p.x, p.y)
+                                                    }
+                                                }
+                                            drawPath(
+                                                path = path,
+                                                color = (if (stroke.isEraser) project.backgroundColor else stroke.color)
+                                                    .copy(alpha = stroke.alpha.coerceIn(0f, 1f)),
+                                                style = Stroke(
+                                                    width = stroke.strokeWidth.coerceAtLeast(1f),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Primary rendering path: actual OpenToonz TStroke geometry.
+                                history.strokes.forEach { stroke ->
+                                    if (stroke.points.size > 1) {
+                                        val path = OpenToonzStrokeCache.getOrGenerate(stroke)
+                                            ?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                            ?: Path().apply {
+                                                moveTo(stroke.points.first().x, stroke.points.first().y)
+                                                stroke.points.drop(1).forEach { p ->
+                                                    lineTo(p.x, p.y)
+                                                }
+                                            }
+                                        drawPath(
+                                            path = path,
+                                            color = (if (stroke.isEraser) project.backgroundColor else stroke.color)
+                                                .copy(alpha = stroke.alpha.coerceIn(0f, 1f)),
+                                            style = Stroke(
+                                                width = stroke.strokeWidth.coerceAtLeast(1f),
+                                                cap = StrokeCap.Round,
+                                                join = StrokeJoin.Round
+                                            )
+                                        )
+                                    }
+                                }
+                            }
 
                             // Active Frame Strokes selection overlays (content already composited above).
                             history.strokes.filter { it.id in selectedStrokeIds }.forEach { stroke ->
@@ -2149,9 +2341,18 @@ fun EditorScreen(
                                 }
                             }
 
-                            // Active dragging stroke preview
+                            // Active dragging stroke preview.
+                            // The authoritative final stroke is still generated by OpenToonz on UP.
+                            // During the drag, show the collected pointer path so the user gets immediate
+                            // visual feedback even though OpenToonz only produces the final TStroke at endStroke().
                             if (currentDrawingPoints.size > 1) {
-                                val path = currentOpenToonzPreview?.let { OpenToonzDrawingEngine.toComposePath(it) } ?: Path()
+                                val path = currentOpenToonzPreview?.let { OpenToonzDrawingEngine.toComposePath(it) }
+                                    ?: Path().apply {
+                                        moveTo(currentDrawingPoints.first().x, currentDrawingPoints.first().y)
+                                        currentDrawingPoints.drop(1).forEach { p ->
+                                            lineTo(p.x, p.y)
+                                        }
+                                    }
                                 drawPath(
                                     path = path,
                                     color = if (tool == ToolType.Eraser) project.backgroundColor else color,
@@ -2435,7 +2636,6 @@ fun EditorScreen(
             onDismiss = { showAudioDialog = false }
         )
     }
-}
 }
 
 @Composable

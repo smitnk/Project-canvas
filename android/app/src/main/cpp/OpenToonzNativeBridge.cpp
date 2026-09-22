@@ -15,21 +15,17 @@ extern "C" {
 JNIEXPORT jboolean JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeInitEngine(JNIEnv *env, jclass clazz) {
     try {
-        // Verify native OpenToonz drawing objects can actually be initialized
-        StrokeGenerator testGenerator;
-        testGenerator.clear();
-        testGenerator.add(TThickPoint(0.0, 0.0, 1.0), 0.0);
-        testGenerator.add(TThickPoint(1.0, 1.0, 1.0), 0.0);
-        testGenerator.filterPoints();
-        TStroke* stroke = testGenerator.makeStroke(4.0, 0, false);
-        if (!stroke) {
-            LOGE("Failed to initialize OpenToonz native stroke pipeline");
-            return JNI_FALSE;
-        }
-        delete stroke;
-        testGenerator.clear();
-
-        LOGI("OpenToonz Native Drawing Engine initialized successfully: OpenToonz v1.8.0 (commit %s)",
+        // Do not run a two-point makeStroke() self-test during class initialization.
+        // OpenToonz StrokeGenerator is a vector-stroke tool and some short/degenerate
+        // inputs are not valid candidates for interpolation. Calling makeStroke() here
+        // used to put the entire Android process at risk before the editor was visible.
+        // The real StrokeEngine below performs generation only for an actual user/project
+        // stroke, while its C++ entry point remains exception guarded.
+        //
+        // Force construction of the real engine and only query its immutable metadata.
+        // This keeps OpenToonz as the authoritative drawing engine without doing risky
+        // geometry work from JNI class initialization.
+        LOGI("OpenToonz Native Drawing Engine loaded: OpenToonz v1.8.0 (commit %s)",
              OpenToonzEngine::StrokeEngine::getCommitSha().c_str());
         return JNI_TRUE;
     } catch (const std::exception& e) {
@@ -57,27 +53,44 @@ Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeBeginStroke(
         jfloat x, jfloat y, jfloat pressure,
         jfloat baseSize, jint color, jfloat opacity,
         jboolean isVector, jfloat smoothError) {
-    LOGI("nativeBeginStroke: start=(%.2f, %.2f) pressure=%.3f baseSize=%.2f smoothError=%.2f isVector=%d",
-         x, y, pressure, baseSize, smoothError, isVector);
-    g_engine.beginStroke((double)x, (double)y, (double)pressure, (double)baseSize, (uint32_t)color, (float)opacity, (bool)isVector, (double)smoothError);
+    try {
+        LOGI("nativeBeginStroke: start=(%.2f, %.2f) pressure=%.3f baseSize=%.2f smoothError=%.2f isVector=%d",
+             x, y, pressure, baseSize, smoothError, isVector);
+        g_engine.beginStroke(
+            (double)x, (double)y, (double)pressure,
+            (double)baseSize, (uint32_t)color, (float)opacity,
+            (bool)isVector, (double)smoothError
+        );
+    } catch (const std::exception& e) {
+        LOGE("nativeBeginStroke OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeBeginStroke OpenToonz unknown exception");
+    }
 }
 
 JNIEXPORT void JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeAddPoint(
         JNIEnv *env, jclass clazz,
         jfloat x, jfloat y, jfloat pressure) {
-    LOGI("nativeAddPoint: pt=(%.2f, %.2f) pressure=%.3f", x, y, pressure);
-    g_engine.addPoint((double)x, (double)y, (double)pressure);
+    try {
+        LOGI("nativeAddPoint: pt=(%.2f, %.2f) pressure=%.3f", x, y, pressure);
+        g_engine.addPoint((double)x, (double)y, (double)pressure);
+    } catch (const std::exception& e) {
+        LOGE("nativeAddPoint OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeAddPoint OpenToonz unknown exception");
+    }
 }
 
 JNIEXPORT jfloatArray JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeEndStroke(JNIEnv *env, jclass clazz) {
     LOGI("nativeEndStroke: invoking OpenToonz StrokeGenerator::filterPoints() and makeStroke() / TStroke::interpolate()");
-    OpenToonzEngine::StrokeResult result = g_engine.endStroke();
-    LOGI("nativeEndStroke: stroke generated with %zu quadratic segments, bbox=[%.2f, %.2f, %.2f, %.2f]",
-         result.segments.size(), result.minX, result.minY, result.maxX, result.maxY);
-    
-    // Pack into flat float array:
+    try {
+        OpenToonzEngine::StrokeResult result = g_engine.endStroke();
+        LOGI("nativeEndStroke: stroke generated with %zu quadratic segments, bbox=[%.2f, %.2f, %.2f, %.2f]",
+             result.segments.size(), result.minX, result.minY, result.maxX, result.maxY);
+
+        // Pack into flat float array:
     // [segmentCount, minX, minY, maxX, maxY, (for each seg: p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, startThick, midThick, endThick)]
     const size_t segCount = result.segments.size();
     const size_t floatCount = 5 + segCount * 9;
@@ -107,15 +120,28 @@ Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeEndStroke(JNIEn
     if (arr != nullptr) {
         env->SetFloatArrayRegion(arr, 0, (jsize)floatCount, buffer.data());
     }
-    return arr;
+        return arr;
+    } catch (const std::exception& e) {
+        LOGE("nativeEndStroke OpenToonz exception: %s", e.what());
+        return nullptr;
+    } catch (...) {
+        LOGE("nativeEndStroke OpenToonz unknown exception");
+        return nullptr;
+    }
 }
 
 JNIEXPORT void JNICALL
 Java_com_smitnk_motioncanvas_drawing_OpenToonzNativeBridge_nativeSetBrushSettings(
         JNIEnv *env, jclass clazz,
         jfloat size, jfloat opacity, jint color) {
-    g_engine.setBrushSize((double)size);
-    g_engine.setColor((uint32_t)color);
+    try {
+        g_engine.setBrushSize((double)size);
+        g_engine.setColor((uint32_t)color);
+    } catch (const std::exception& e) {
+        LOGE("nativeSetBrushSettings OpenToonz exception: %s", e.what());
+    } catch (...) {
+        LOGE("nativeSetBrushSettings OpenToonz unknown exception");
+    }
 }
 
 } // extern "C"

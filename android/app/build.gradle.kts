@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.smitnk.motioncanvas"
     compileSdk = 36
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.smitnk.motioncanvas"
@@ -62,9 +63,17 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+
     // Apache-2.0 AndroidX Media3: multi-track composition/export
     implementation("androidx.media3:media3-transformer:1.11.1")
     implementation("androidx.media3:media3-common:1.11.1")
+
+    // Apache-2.0 brush preset/configuration library.
+    // Used as a brush-library source; OpenToonz remains the actual stroke engine.
+    implementation("com.raedapps:rasmview:1.2.1")
+
+    // MIT professional HSV/ARGB color wheel + gradient/alpha controls.
+    implementation("com.github.antonpopoff:colorwheel:1.1.13")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

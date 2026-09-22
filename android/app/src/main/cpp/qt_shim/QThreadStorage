@@ -1,0 +1,16 @@
+#pragma once
+
+#include <unordered_map>
+
+template <typename T>
+class QThreadStorage {
+  inline static thread_local std::unordered_map<const QThreadStorage<T> *, T> values;
+
+public:
+  bool hasLocalData() const { return values.find(this) != values.end(); }
+  T localData() const {
+    auto it = values.find(this);
+    return it == values.end() ? T() : it->second;
+  }
+  void setLocalData(T value) { values[this] = value; }
+};
