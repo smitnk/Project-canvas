@@ -55,6 +55,12 @@ jobs:
           test -f app/src/main/cpp/lz4/lib/lz4frame.h
           test -f app/src/main/cpp/lz4/build/cmake/CMakeLists.txt
 
+      - name: Set up Android NDK 27
+        uses: android-actions/setup-android@v3
+      - name: Install Android NDK 27
+        shell: bash
+        run: sdkmanager "ndk;27.0.12077973"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
