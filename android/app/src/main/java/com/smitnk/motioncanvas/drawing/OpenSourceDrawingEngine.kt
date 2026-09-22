@@ -8,16 +8,8 @@ import kotlin.math.min
 /**
  * MotionCanvas native drawing engine.
  *
- * Feature references:
- * - Dolphin Animate (MIT): pressure-aware smooth vector strokes, spacing and
- *   Catmull-Rom/Bezier-style smoothing concepts.
- * - FrameBaker (MIT): frame editor / transform / timeline-oriented drawing flow.
- * - Klecks (MIT): pressure + stabilizer drawing, smudge/selection-oriented UX.
- * - OpenToonz (Modified BSD / third-party licenses vary): production animation
- *   drawing/timeline concepts.
- *
- * This file is an independent Kotlin implementation; it does not bundle their
- * source code. See OPEN_SOURCE_NOTICES_V27.md for attribution and licenses.
+ * This is a software fallback only. OpenToonz remains the authoritative native
+ * vector stroke engine whenever its native library is available.
  */
 object OpenSourceDrawingEngine {
 
@@ -95,5 +87,60 @@ object OpenSourceDrawingEngine {
             maxX = max(maxX, p.x); maxY = max(maxY, p.y)
         }
         return Offset(minX, minY) to Offset(maxX, maxY)
+    }
+
+    fun toGeneratedStroke(
+        points: List<Offset>,
+        stroke: com.smitnk.motioncanvas.DrawStroke
+    ): OpenToonzDrawingEngine.GeneratedStroke {
+        if (points.size < 2) {
+            val p = points.firstOrNull() ?: Offset.Zero
+            val bounds = bounds(points) ?: (p to p)
+            return OpenToonzDrawingEngine.GeneratedStroke(
+                segments = emptyList(),
+                minX = bounds.first.x,
+                minY = bounds.first.y,
+                maxX = bounds.second.x,
+                maxY = bounds.second.y,
+                isVector = !stroke.isEraser
+            )
+        }
+
+        fun pressureNear(point: Offset): Float {
+            var bestPressure = 1f
+            var bestDistance = Float.POSITIVE_INFINITY
+            for (source in stroke.points) {
+                val dx = source.x - point.x
+                val dy = source.y - point.y
+                val distance = dx * dx + dy * dy
+                if (distance < bestDistance) {
+                    bestDistance = distance
+                    bestPressure = source.pressure
+                }
+            }
+            return bestPressure
+        }
+
+        val segments = points.zipWithNext().map { (a, b) ->
+            val mid = Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f)
+            OpenToonzDrawingEngine.QuadSegment(
+                p0 = a,
+                p1 = mid,
+                p2 = b,
+                startThick = pressureWidth(stroke.strokeWidth, pressureNear(a)),
+                midThick = pressureWidth(stroke.strokeWidth, pressureNear(mid)),
+                endThick = pressureWidth(stroke.strokeWidth, pressureNear(b))
+            )
+        }
+
+        val (min, max) = bounds(points) ?: (points.first() to points.first())
+        return OpenToonzDrawingEngine.GeneratedStroke(
+            segments = segments,
+            minX = min.x,
+            minY = min.y,
+            maxX = max.x,
+            maxY = max.y,
+            isVector = !stroke.isEraser
+        )
     }
 }
